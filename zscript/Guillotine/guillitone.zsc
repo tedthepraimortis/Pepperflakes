@@ -1,21 +1,7 @@
 const HDLD_GUIL="lpg";
 
 const HDLD_GMAG="n15";
-// ------------------------------------------------------------
-// "La Petite Guillotine" 
-//A unique piece, designed by the talented Belgian gunsmith Emeline Leone. Built off the Mouletta 99FX platform it chambers the powerful 9mm Nail Driver Maximum. 
-//Originally created for competition shooting, the 9mm NDM cartridge was quickly adapted for use as a self defense cartridge against violent gangs of armored Mimes with the addition of a hardened tungsten penetrator. 
-//Before long it found itself being used in the battle against the tyrant's forces with great effect. 
-//It is unknown where this pistol came from, or where it's creator is though upon closer inspection you see it is worn, with dried blood and scratch marks on the butt of the pistol. Though some rumors claim she has retired to the Belgian countryside.
-//The 9mm NDM traces it's roots back to the .355 Hardball cartridge, the case been cut down from 33mm to 25mm and necked down to accomodate a 7.62mm Projectile instead of the usual 9mm. 
-//The projectile features a hardened tungsten penetrator tip sharply pointed to aid in penetration, allowing it to pierce through up to level IIIA armor with ease. 
-//The projectile body is made of a dense copper alloy, designed to fragment creating grevious wounds on unarmored targets. Propelling a lightweight 92 grain (6 grams) projectile at a brisk 1850 feet per second (564 m/s). 
-//Overall, the cartridge has more power and energy compared to 9mm Parumpudicum, giving it a greater recoil impulse than the standard cartridge. 
-//The pistol itself, being based on the Mouletta 99FX uses the same magazines as the original pistol with the same capacity. Just like the stock pistol it is a DA/SA pistol, with the addition of a decocker for carry purposes. 
-//The Guillotine features a durable custom frame made of a lightweight Meteora alloy which reduces weight. Though this is offset by the heavier Brigadier style slide and addition of a compensator. 
-//The hammer has been skeletonized and all the internals have been replaced with competition grade parts, most notably the trigger which is far lighter and smoother than it's stock counterpart. The magazine release has been made ambidextrous and is extended, the magazine well itself has been beveled to assist in reloading.
-//The grips have been personalized for someone with much smaller hands than normal, which makes it rather uncomfortable to hold. Engraved on the left hand of the slide are the words "La Petite Guillotine".
-// ------------------------------------------------------------
+// No more yap sesh lemme edit this shit - [Tavi]
 class HDGuillotine:HDHandgun{
 	default{
 		+hdweapon.fitsinbackpack
