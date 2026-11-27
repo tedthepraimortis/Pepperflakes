@@ -121,44 +121,34 @@ class HDHelzing:PGHandgun{
 		vector2 scc;
 		vector2 bobb=bob*1.3;
 		if(hpl.player.getpsprite(PSP_WEAPON).frame>=2){
-			if(weaponstatus[0]&HMPF_BLUEUSE){
-				scc=(1.2, 1.2);
-			}else{
-				sb.SetClipRect(
-					-10+bob.x,-5+bob.y,20,14,
-					sb.DI_SCREEN_CENTER
-				);
-				scc=(0.7,0.8);
-			}
+			sb.SetClipRect(
+				-10+bob.x,-5+bob.y,20,14,
+				sb.DI_SCREEN_CENTER
+			);
+			scc=(0.7,0.8);
+		}else if(weaponstatus[0]&HMPF_BLUEUSE){
+			sb.SetClipRect(
+				-8+bob.x,-4+bob.y,16,-10,
+				sb.DI_SCREEN_CENTER
+			);
+			scc=(0.9,0.9);
 		}else{
-			/*sb.SetClipRect(
+			sb.SetClipRect(
 				-8+bob.x,-4+bob.y,16,10,
 				sb.DI_SCREEN_CENTER
-			);*/
-			if(weaponstatus[0]&HMPF_BLUEUSE){
-				sb.SetClipRect(
-					-8+bob.x,-4+bob.y,16,-10,
-					sb.DI_SCREEN_CENTER
-				);
-				scc=(0.9,0.9);
-			}else{
-				sb.SetClipRect(
-					-8+bob.x,-4+bob.y,16,10,
-					sb.DI_SCREEN_CENTER
-				);
-				scc=(0.6,0.6);hld
-			}
+			);
+			scc=(0.6,0.6);
 		}
 		if(weaponstatus[0]&HMPF_BLUEUSE)
-			sb.drawimage(
-				"rusorth",(0,-5)+bobb,sb.DI_SCREEN_CENTER|sb.DI_ITEM_TOP,
-				alpha:0.9,scale:scc
-			);
-			else sb.drawimage(
-				"frntsite",(0,0)+bobb,sb.DI_SCREEN_CENTER|sb.DI_ITEM_TOP,
-				alpha:0.9,scale:scc
-			);
-			sb.SetClipRect(cx,cy,cw,ch);
+		sb.drawimage(
+			"rusorth",(0,-5)+bobb,sb.DI_SCREEN_CENTER|sb.DI_ITEM_TOP,
+			alpha:0.9,scale:scc
+		);
+		else sb.drawimage(
+			"frntsite",(0,0)+bobb,sb.DI_SCREEN_CENTER|sb.DI_ITEM_TOP,
+			alpha:0.9,scale:scc
+		);
+		sb.SetClipRect(cx,cy,cw,ch);
 		if(weaponstatus[0]&HMPF_BLUEUSE)
 		sb.drawimage(
 			"hzguide",(0,-3)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_TOP,
