@@ -1,0 +1,57 @@
+class BreakerGripKit : PGAttachment{
+	default {
+		Scale 0.5;
+		Inventory.PickupMessage "You got a P90 Civvie Grip!";
+		HDPickup.RefID "pgr";
+		HDPickup.Bulk 24;
+		+Inventory.InvBar;
+		+hdpickup.norandombackpackspawn;
+		Tag "P90 Civvie Grip";
+	}
+	action void a_activate(){
+		let sacrificeP90 = HDBreakerP90(player.readyweapon);
+		if (
+			!sacrificeP90
+			|| !sacrificeP90.weaponstatus[0]&PEENF_CIVVIE
+			) {
+			a_log("You need a Civilian P90 to use this on");
+		} else if (sacrificeP90.weaponstatus[PEENS_UB]==1){
+			a_log("You need a valid P90 to use this on");
+		} else {
+			[invoker.garbage,invoker.newgun] = self.A_SpawnItemEx("HDBreakerP90",
+					cos(pitch)*12,0,height-8-sin(pitch)*12,
+					cos(pitch)*(random(10,20)*0.1),0.2*randompick(-1,1),-sin(pitch),
+					0,SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH
+				);
+			invoker.breaker = HDBreakerP90(invoker.breaker);
+			
+			if(sacrificeP90.weaponstatus[0]&PEENF_CHAMBER)
+			{
+				invoker.breaker.weaponstatus[0]|=PEENF_CHAMBER;
+			}
+			if(sacrificeP90.weaponstatus[0]&PEENF_CIVVIE)
+			{
+				invoker.breaker.weaponstatus[0]|=PEENF_CIVVIE;
+			}
+			if(sacrificeP90.weaponstatus[0]&PEENF_JAMMED)
+			{
+				invoker.breaker.weaponstatus[0]|=PEENF_JAMMED;
+			}
+			if(sacrificeP90.weaponstatus[0]&PEENF_EIGHT)
+			{
+				invoker.breaker.weaponstatus[0]|=PEENF_EIGHT;
+			}
+			invoker.breaker.weaponstatus[PEENS_MAG] = sacrificeP90.weaponstatus[PEENS_MAG];
+			invoker.breaker.weaponstatus[PEENS_UB]=1;
+			sacrificeP90.destroy();
+			self.takeinventory("BreakerGripKit",1);
+		}
+	}
+	states{
+		Spawn:
+			PNTK Z -1;
+			loop;
+		Use:
+			TNT1  A 0 a_activate();
+	}
+}

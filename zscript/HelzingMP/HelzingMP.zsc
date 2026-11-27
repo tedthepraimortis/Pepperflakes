@@ -1,0 +1,742 @@
+class HDHelzing:PGHandgun{
+	int potamt;
+	double currentvel;
+	default{
+		+hdweapon.fitsinbackpack
+		+hdweapon.reverseguninertia
+		scale 0.50;
+		weapon.selectionorder 50;
+		weapon.slotnumber 2;
+		weapon.slotpriority 1.5;
+		weapon.kickback 30;
+		weapon.bobrangex 0.1;
+		weapon.bobrangey 0.6;
+		weapon.bobspeed 2.5;
+		weapon.bobstyle "normal";
+		obituary "$PEPPER_OBITUARY_HELZING";
+		inventory.pickupmessage "$PEPPER_PICKUP_HELZING";
+		tag "$PEPPER_TAG_HELZING";
+		hdweapon.refid "hlz";
+		hdweapon.barrelsize 22,0.3,0.6;
+		inventory.maxamount 3;
+				
+		hdweapon.loadoutcodes "
+			\cujustone - 0/1, Start with one sip
+			\cuholy 0/1, Start with a full bottle";
+	}
+	override bool AddSpareWeapon(actor newowner){return AddSpareWeaponRegular(newowner);}
+	override hdweapon GetSpareWeapon(actor newowner,bool reverse,bool doselect){return GetSpareWeaponRegular(newowner,reverse,doselect);}
+	override void postbeginplay(){
+		super.postbeginplay();
+		if(weaponstatus[HMPS_BLUE]>-1){
+			bobrangex*=1.05;
+			bobrangey*=1.2;
+		}
+	}
+	override double weaponbulk(){
+		int mgg=weaponstatus[HMPS_MAG];
+		return 30+(mgg<0?0:(ENC_355MAG_EMPTY+mgg*ENC_355))+(weaponstatus[HMPS_BLUE]>=0?ENC_POTION:0);
+	}
+	override double gunmass(){
+		return 5; //previous 10
+	}
+	override void failedpickupunload(){
+		failedpickupunloadmag(HMPS_MAG,"HD355Mag");
+	}
+	override string,double getpickupsprite(){
+		string spr;
+		if(weaponstatus[HMPS_BLUE]>=0){
+			if(weaponstatus[HMPS_CHAMBER]<2)spr="D";
+			else spr="B";
+		}else if(weaponstatus[HMPS_CHAMBER]<2)spr="C";
+		else spr="A";
+		return "HMPT"..spr.."0",1.;
+	}
+	override void DrawHUDStuff(HDStatusBar sb,HDWeapon hdw,HDPlayerPawn hpl){
+		if(sb.hudlevel==1){
+			int nextmagloaded=sb.GetNextLoadMag(hdmagammo(hpl.findinventory("HD355Mag")));
+			string magspr;
+			switch(nextmagloaded){
+				case 0: magspr = "3MAGA0"; break;
+				case 1: magspr = "3MAGB0"; break;
+				case 2: magspr = "3MAGC0"; break;
+				case 3: case 4: magspr = "3MAGD0"; break;
+				case 5: case 6: magspr = "3MAGE0"; break;
+				case 7: case 8: magspr = "3MAGF0"; break;
+				case 9: case 10: magspr = "3MAGG0"; break;
+				case 11: case 12: magspr = "3MAGH0"; break;
+				default: magspr = "3MAGA0"; break;
+			}
+			sb.drawimage(magspr,(-46,-3),sb.DI_SCREEN_CENTER_BOTTOM,scale:(1,1));
+			/*if(nextmagloaded>=12){
+				sb.drawimage("3MAGB0",(-46,-3),sb.DI_SCREEN_CENTER_BOTTOM,scale:(1,1));
+			}else if(nextmagloaded<1){
+				sb.drawimage("3MAGA0",(-46,-3),sb.DI_SCREEN_CENTER_BOTTOM,alpha:nextmagloaded?0.6:1.,scale:(1,1));
+			}else sb.drawbar(
+				"3MAGB0","3MAGEMPT",
+				nextmagloaded,12,
+				(-46,-3),-1,
+				sb.SHADER_VERT,sb.DI_SCREEN_CENTER_BOTTOM
+			);*/
+			sb.drawnum(hpl.countinv("HD355Mag"),-43,-8,sb.DI_SCREEN_CENTER_BOTTOM);
+		}
+		if(Wads.CheckNumForName("id",0)==-1){
+			sb.drawwepcounter(hdw.weaponstatus[0]&HMPF_BLUEUSE,
+				-35,-10,"","BLLTHD2"
+			);
+		}else{
+			sb.drawwepcounter(hdw.weaponstatus[0]&HMPF_BLUEUSE,
+				-35,-10,"","BLHD2"
+			);
+		}
+		sb.drawwepnum(hdw.weaponstatus[HMPS_MAG],12);
+		if(hdw.weaponstatus[HMPS_BLUE]>=0)sb.drawwepnum(hdw.weaponstatus[HMPS_BLUE],12,posy:-3);
+		if(hdw.weaponstatus[HMPS_CHAMBER]==2)sb.drawrect(-19,-11,3,1);
+		
+		if(hd_debug){
+			sb.drawstring(
+				sb.mAmountFont,string.format("%.2f",currentvel),
+				(-36,-18),sb.DI_SCREEN_CENTER_BOTTOM|sb.DI_TEXT_ALIGN_RIGHT,Font.CR_DARKGRAY
+			);
+		}
+	}
+	override string gethelptext(){
+		bool blue=(weaponstatus[0]&HMPF_BLUEUSE);
+		bool hasblu=(weaponstatus[HMPS_BLUE]>0);
+		return
+		LWPHELP_FIRE..((blue && hasblu)?" Fire Consecrated Round\n":" Shoot\n")
+		..LWPHELP_RELOAD..(blue?" Reload Bottle":" Reload").."\n"
+		..LWPHELP_UNLOAD..(blue?" Unload Bottle\n":" Unload\n")
+		..LWPHELP_FIREMODE..(blue?" Close Valve\n":" Open Valve\n")
+		..LWPHELP_ALTRELOAD.." Quick-Swap (if available)\n"
+		..LWPHELP_MAGMANAGER
+		;
+	}
+	override void DrawSightPicture(
+		HDStatusBar sb,HDWeapon hdw,HDPlayerPawn hpl,
+		bool sightbob,vector2 bob,double fov,bool scopeview,actor hpc,string whichdot
+	){
+		int cx,cy,cw,ch;
+		[cx,cy,cw,ch]=screen.GetClipRect();
+		vector2 scc;
+		vector2 bobb=bob*1.3;
+		if(hpl.player.getpsprite(PSP_WEAPON).frame>=2){
+			if(weaponstatus[0]&HMPF_BLUEUSE){
+				scc=(1.2, 1.2);
+			}else{
+				sb.SetClipRect(
+					-10+bob.x,-5+bob.y,20,14,
+					sb.DI_SCREEN_CENTER
+				);
+				scc=(0.7,0.8);
+			}
+		}else{
+			/*sb.SetClipRect(
+				-8+bob.x,-4+bob.y,16,10,
+				sb.DI_SCREEN_CENTER
+			);*/
+			if(weaponstatus[0]&HMPF_BLUEUSE){
+				sb.SetClipRect(
+					-8+bob.x,-4+bob.y,16,-10,
+					sb.DI_SCREEN_CENTER
+				);
+				scc=(0.9,0.9);
+			}else{
+				sb.SetClipRect(
+					-8+bob.x,-4+bob.y,16,10,
+					sb.DI_SCREEN_CENTER
+				);
+				scc=(0.6,0.6);hld
+			}
+		}
+		if(weaponstatus[0]&HMPF_BLUEUSE)
+			sb.drawimage(
+				"rusorth",(0,-5)+bobb,sb.DI_SCREEN_CENTER|sb.DI_ITEM_TOP,
+				alpha:0.9,scale:scc
+			);
+			else sb.drawimage(
+				"frntsite",(0,0)+bobb,sb.DI_SCREEN_CENTER|sb.DI_ITEM_TOP,
+				alpha:0.9,scale:scc
+			);
+			sb.SetClipRect(cx,cy,cw,ch);
+		if(weaponstatus[0]&HMPF_BLUEUSE)
+		sb.drawimage(
+			"hzguide",(0,-3)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_TOP,
+			scale:scc
+		);
+		else sb.drawimage(
+			"backsite",(0,0)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_TOP,
+			scale:scc
+		);
+	}
+	override void DropOneAmmo(int amt){
+		if(owner){
+			amt=clamp(amt,1,10);
+			if(owner.countinv("HDRevolverAmmo"))owner.A_DropInventory("HDRevolverAmmo",amt*12);
+			else owner.A_DropInventory("HD355Mag",amt);
+		}
+	}
+	override void ForceBasicAmmo(){
+		owner.A_TakeInventory("HDRevolverAmmo");
+		owner.A_TakeInventory("HD355Mag");
+		owner.A_GiveInventory("HD355Mag");
+	}
+/*	override void DetachFromOwner(){
+		weaponstatus[HMPS_HOLY]=0;
+		Super.DetachFromOwner();
+	}
+*/	
+	action void A_CheckPistolHand(){
+		if(invoker.wronghand)player.getpsprite(PSP_WEAPON).sprite=getspriteindex("HSA2A0");
+	}
+	states{
+	select0:
+		HSAC A 0{
+			if(!countinv("NulledWeapon"))invoker.wronghand=false;
+			A_TakeInventory("NulledWeapon");
+			A_CheckPistolHand();
+		}
+		#### A 0 A_JumpIf(invoker.weaponstatus[HMPS_CHAMBER]>0,2);
+		#### E 0;
+		---- A 1 A_Raise();
+		---- A 1 A_Raise(30);
+		---- A 1 A_Raise(30);
+		---- A 1 A_Raise(24);
+		---- A 1 A_Raise(18);
+		wait;
+	deselect0:
+		HSAC A 0 A_CheckPistolHand();
+		#### A 0 A_JumpIf(invoker.weaponstatus[HMPS_CHAMBER]>0,2);
+		#### E 0;
+		---- AAA 1 A_Lower();
+		---- A 1 A_Lower(18);
+		---- A 1 A_Lower(24);
+		---- A 1 A_Lower(30);
+		wait;
+
+	ready:
+		HSAC A 0 {
+			A_CheckPistolHand();
+			A_CheatFail();
+		}
+		#### A 0 A_JumpIf(invoker.weaponstatus[HMPS_CHAMBER]>0,2);
+		#### E 0;
+		#### # 1{
+			if(invoker.weaponstatus[0]&HMPF_BLUEUSE){
+				if(PressingFire()){
+					setweaponstate("fire");
+				}
+				if(PressingReload()){
+					setweaponstate("reblue");
+				}
+				if(PressingUnload()){
+					invoker.weaponstatus[0]|=HMPF_JUSTUNLOAD;
+					setweaponstate("unblue");
+				}
+			}else{
+				if(PressingReload()){
+					setweaponstate("reload");
+				}
+				if(PressingUnload()){
+					setweaponstate("unload");
+				}
+				if(PressingFire()){
+					setweaponstate("Fire");
+				}
+			}
+		}
+		#### # 0 A_SetCrosshair(21);
+		#### # 0 A_WeaponReady((WRF_ALL|WRF_NOFIRE)&~WRF_ALLOWUSER4&~WRF_ALLOWRELOAD);
+		goto readyend;
+	user3:
+		---- A 0 A_MagManager("HD355Mag");
+		goto ready;
+	firemode:
+		---- A 0{
+			invoker.weaponstatus[0]^=HMPF_BLUEUSE;
+			A_SetHelpText();
+		}goto nope;
+	altfire:
+		---- A 0{
+			invoker.weaponstatus[0]&=~HMPF_JUSTUNLOAD;
+			if(
+				invoker.weaponstatus[HMPS_CHAMBER]!=2
+				&&invoker.weaponstatus[HMPS_MAG]>0
+			)setweaponstate("chamber_manual");
+		}goto nope;
+	chamber_manual:
+		---- A 0 A_JumpIf(
+			!(invoker.weaponstatus[0]&HMPF_JUSTUNLOAD)
+			&&(
+				invoker.weaponstatus[HMPS_CHAMBER]==2
+				||invoker.weaponstatus[HMPS_MAG]<1
+			)
+			,"nope"
+		);
+		#### E 3 offset(0,34);
+		#### D 4 offset(0,37){
+			A_MuzzleClimb(frandom(0.4,0.5),-frandom(0.6,0.8));
+			A_StartSound("weapons/hmpchamber2",8);
+			int psch=invoker.weaponstatus[HMPS_CHAMBER];
+			invoker.weaponstatus[HMPS_CHAMBER]=0;
+			if(psch==2){
+                A_EjectCasing("HDRevolverAmmo",
+                              frandom(-1,2),
+                              (frandom(0,0.2),-frandom(2,3),frandom(0.4,0.5)),
+                              (0,0,-2)
+                            );
+
+			}else if(psch==1){
+                A_EjectCasing("HDSpent355",
+                              -frandom(-1,2),
+                              (frandom(0.4,0.7),-frandom(6,7),frandom(0.8,1)),
+                              (0,0,-2)
+                             );
+			}
+			if(invoker.weaponstatus[HMPS_MAG]>0){
+				invoker.weaponstatus[HMPS_CHAMBER]=2;
+				invoker.weaponstatus[HMPS_MAG]--;
+			}
+		}
+		#### E 3 offset(0,35);
+		goto nope;
+	althold:
+	hold:
+		goto nope;
+	fire:
+		---- A 0{
+			invoker.weaponstatus[0]&=~HMPF_JUSTUNLOAD;
+			if(invoker.weaponstatus[HMPS_CHAMBER]==2){
+				if(invoker.weaponstatus[0]&HMPF_BLUEUSE&&invoker.weaponstatus[HMPS_BLUE]>0)setweaponstate("shootB");
+				else setweaponstate("shootA");}
+			else if(invoker.weaponstatus[HMPS_MAG]>0)setweaponstate("chamber_manual");
+		}goto nope;
+	shootA:
+		#### A 0{if(invoker.weaponstatus[HMPS_CHAMBER]==2)A_GunFlash();}
+		#### BC 1;
+		goto shoot;
+	shootB:
+		#### A 0{if(invoker.weaponstatus[HMPS_CHAMBER]==2)A_GunFlash();}
+		#### LM 1;
+		goto shoot;
+	shoot:
+		#### DE 1{
+			if(hdplayerpawn(self)){
+				hdplayerpawn(self).gunbraced=false;
+			}
+			A_MuzzleClimb(
+				-frandom(0.4,0.5),-frandom(0.6,0.8),
+				frandom(0.2,0.3),frandom(0.3,0.4));
+		}
+		#### A 0{
+			A_EjectCasing("HDSpent355",
+                              -frandom(-1,2),
+                              (frandom(0.4,0.7),-frandom(6,7),frandom(0.8,1)),
+                              (0,0,-2)
+                             );
+			invoker.weaponstatus[HMPS_CHAMBER]=0;
+			if(invoker.weaponstatus[HMPS_MAG]<1){
+				A_StartSound("weapons/pistoldry",8,CHANF_OVERLAP,0.9);
+				setweaponstate("nope");
+			}
+		}
+		#### A 1{
+			A_WeaponReady(WRF_NOFIRE);
+			invoker.weaponstatus[HMPS_CHAMBER]=2;
+			invoker.weaponstatus[HMPS_MAG]--;
+			if(
+				(invoker.weaponstatus[0]&(HMPF_BLUEUSE))
+				&&invoker.weaponstatus[HMPS_BLUE]>0
+			){
+				if(!invoker.weaponstatus[HMPS_CHEAT]==1)invoker.weaponstatus[HMPS_BLUE]--;
+				let pnr=HDPlayerPawn(self);
+				if(
+					pnr&&countinv("IsMoving")
+					&&pnr.fatigue<12
+				)pnr.fatigue++;
+				A_GiveInventory("IsMoving",5);
+				A_Refire();
+			}else A_Refire();
+		}goto ready;
+	flash:
+		#### A 0 A_JumpIf(invoker.wronghand,2);
+		#### A 0;
+		---- A 0 bright{
+			HDFlashAlpha(64);
+			A_Light1();
+			
+			double blues = HDPlayerPawn(self).CountInv("HealingMagic");
+			//potion 7*12(84), sphere 210
+			//Im working under the assumption that the average blues-maining player has 3 spheres in 'em (~700)
+			
+/*			double bluvel=(		//velocity added during potion shot
+				1*log(
+					1+0.00025*blues
+				)
+			);
+*/
+			bool altshot=(invoker.weaponstatus[0]&HMPF_BLUEUSE&&invoker.weaponstatus[HMPS_BLUE]>0); //potion shot validity check
+			bool paladin=invoker.weaponstatus[0]&HMPF_HOLY;	//paladin mode check
+			double holybonus=0.0016*blues; //bonus added by blues in paladin mode 
+			double velo=(
+				paladin?0.86+holybonus:1.08
+				+invoker.weaponstatus[HMPS_CHEAT]==2?2:0
+			);
+			invoker.currentvel=velo;
+			let bbb=HDBulletActor.FireBullet(self,altshot?"HDB_355HOLY":"HDB_355",spread:1.,speedfactor:velo);
+			if(
+				frandom(0,ceilingz-floorz)<bbb.speed*0.3
+			)A_AlertMonsters(256);
+
+			invoker.weaponstatus[HMPS_CHAMBER]=1;
+			A_ZoomRecoil(0.995);
+			A_StartSound("weapons/hmpfire",CHAN_WEAPON,CHANF_OVERLAP,1.);
+			A_StartSound("weapons/hmpblast",CHAN_WEAPON,CHANF_OVERLAP,1.);
+			if(altshot){
+				A_MuzzleClimb(-frandom(1.0,1.8),-frandom(3.8,4.2));;
+				A_StartSound("weapons/hmpholy",CHAN_WEAPON,CHANF_OVERLAP,1.);
+				A_StartSound("weapons/hmpfireholy",CHAN_WEAPON,CHANF_OVERLAP,0.5);
+				if(paladin){
+					HDPlayerPawn(self).TakeInventory("HealingMagic",blues*0.12);
+					//add some kind of auxillary feedback or effect
+				}
+				//A_StartSound("weapons/hmpblast",CHAN_WEAPON,CHANF_OVERLAP,0.8);
+			}
+		}
+		---- A 0 A_Light0();
+		stop;
+	unload:
+		---- # 0{
+			invoker.weaponstatus[0]|=HMPF_JUSTUNLOAD;
+			if(invoker.weaponstatus[HMPS_MAG]>=0)setweaponstate("unmag");
+		}goto chamber_manual;
+	loadchamber:
+		---- A 0 A_JumpIf(invoker.weaponstatus[HMPS_CHAMBER]>0,"nope");
+		---- A 1 offset(0,36) A_StartSound("weapons/pocket",9);
+		---- A 1 offset(2,40);
+		---- A 1 offset(2,50);
+		---- A 1 offset(3,60);
+		---- A 2 offset(5,90);
+		---- A 2 offset(7,80);
+		---- A 2 offset(10,90);
+		#### E 2 offset(8,96);
+		#### E 3 offset(6,88){
+			if(countinv("HDRevolverAmmo")){
+				A_TakeInventory("HDRevolverAmmo",1,TIF_NOTAKEINFINITE);
+				invoker.weaponstatus[HMPS_CHAMBER]=2;
+				A_StartSound("weapons/hmpchamber1",8);
+			}
+		}
+		#### E 2 offset(5,76);
+		#### E 1 offset(4,64);
+		#### E 1 offset(3,56);
+		#### E 1 offset(2,48);
+		#### E 2 offset(1,38);
+		#### E 3 offset(0,34);
+		goto readyend;
+	reload:
+		#### # 0{
+			invoker.weaponstatus[0]&=~HMPF_JUSTUNLOAD;
+			bool nomags=HDMagAmmo.NothingLoaded(self,"HD355Mag");
+			if(invoker.weaponstatus[HMPS_MAG]>=12)setweaponstate("nope");
+			else if(
+				invoker.weaponstatus[HMPS_MAG]<1
+				&&(
+					pressinguse()
+					||nomags
+				)
+			){
+				if(
+					countinv("HDRevolverAmmo")
+				)setweaponstate("loadchamber");
+				else setweaponstate("nope");
+			}else if(nomags)setweaponstate("nope");
+		}goto unmag;
+	unmag:
+		#### # 1 A_SetCrosshair(21);
+		#### H 1 ;
+		#### I 2 ;
+		#### J 3 A_StartSound("weapons/hmpmagclick",8,CHANF_OVERLAP);
+		---- J 0{
+			int pmg=invoker.weaponstatus[HMPS_MAG];
+			invoker.weaponstatus[HMPS_MAG]=-1;
+			if(pmg<0)setweaponstate("magout");
+			else if(
+				(!PressingUnload()&&!PressingReload())
+				||A_JumpIfInventory("HD355Mag",0,"null")
+			){
+				HDMagAmmo.SpawnMag(self,"HD355Mag",pmg);
+				setweaponstate("magout");
+			}
+			else{
+				HDMagAmmo.GiveMag(self,"HD355Mag",pmg);
+				A_StartSound("weapons/pocket",9);
+				setweaponstate("pocketmag");
+			}
+		}
+	pocketmag:
+		#### JJK 5 A_MuzzleClimb(frandom(-0.2,0.8),frandom(-0.2,0.4));
+		goto magout;
+	magout:
+		#### J 0{
+			bool unl=invoker.weaponstatus[0]&HMPF_JUSTUNLOAD;
+			if(!unl)setweaponstate("loadmag");
+			}
+		#### JIH 5 A_MuzzleClimb(frandom(-0.2,0.8),frandom(-0.2,0.4));
+		---- A 3;
+		goto reloadend;
+	loadmag:
+		#### K 4 A_MuzzleClimb(frandom(-0.2,0.8),frandom(-0.2,0.4));
+		#### K 0 A_StartSound("weapons/pocket",9);
+		#### JIH 5 A_MuzzleClimb(frandom(-0.2,0.8),frandom(-0.2,0.4));
+		---- A 3;
+		---- A 0{
+			let mmm=hdmagammo(findinventory("HD355Mag"));
+			if(mmm){
+				invoker.weaponstatus[HMPS_MAG]=mmm.TakeMag(true);
+				A_StartSound("weapons/hmpmagclick",8);
+			}
+		}goto reloadend;
+	reloadend:
+		#### A 2 offset(3,46);
+		---- A 1 offset(2,42);
+		---- A 1 offset(2,38);
+		---- A 1 offset(1,34);
+		---- A 0 A_JumpIf(!(invoker.weaponstatus[0]&HMPF_JUSTUNLOAD),"chamber_manual");
+		goto nope;
+	reblue:
+		#### # 0{
+			invoker.weaponstatus[0]&=~HMPF_JUSTUNLOAD;
+			bool nobottle=!countinv("HDHealingPotion");
+			if(
+				invoker.weaponstatus[HMPS_BLUE]>=12
+				)setweaponstate("reload");
+			else if(
+				invoker.weaponstatus[HMPS_BLUE]<1
+				&&nobottle
+			)setweaponstate("reload");
+		}goto unblue;
+	unblue:
+		#### # 1 A_SetCrosshair(21);
+		#### H 1 ;
+		#### I 2 ;
+		#### J 3 A_StartSound("potion/open",8,CHANF_OVERLAP);
+		---- J 0{
+			if(invoker.weaponstatus[HMPS_BLUE]>=0){
+				//let hhh=hdweapon(spawn("HDHealingPotion",(invoker.owner.pos.x, invoker.owner.pos.y, invoker.owner.pos.z)));
+				let hdp=hdplayerpawn(self);
+				let hhh=hdweapon(spawn("HDHealingPotion",(invoker.owner.pos.x, invoker.owner.pos.y, invoker.owner.pos.z)));
+				hhh.angle=hdp.angle;
+				hhh.A_ChangeVelocity(2,0,-1,CVF_RELATIVE);
+				hhh.vel+=hhh.vel;
+				int pmg=invoker.weaponstatus[HMPS_BLUE];
+				if(Wads.CheckNumForName("id",0)==-1){
+				//	console.printf("in lotan");
+					hhh.A_SetScale(0.5);
+					//hhh.setstatelabel("plucked");
+				}
+				A_StartSound("weapons/bottleload",8);
+				A_SetHelpText();
+				if(pmg<=0){
+					invoker.weaponstatus[HMPS_BLUE]=-1;
+					hhh.weaponstatus[HDHM_AMOUNT]=0;
+				}else{
+						if(Wads.CheckNumForName("id",0)==-1){
+						//	console.printf("in lotan 2 yippee");
+							hhh.setstatelabel("plucked");
+						}
+					invoker.weaponstatus[HMPS_BLUE]=-1;
+					hhh.weaponstatus[HDHM_AMOUNT]=pmg;
+				}
+			}
+		}
+		#### # 0 A_JumpIf(!(invoker.weaponstatus[0]&HMPF_JUSTUNLOAD),"blueout");
+		#### JIHA 3;
+		goto reloadend;
+	blueout:
+		#### J 0{
+			bool unl=invoker.weaponstatus[0]&HMPF_JUSTUNLOAD;
+			if(!unl)setweaponstate("loadblue");
+			}
+		#### JIH 5 A_MuzzleClimb(frandom(-0.2,0.8),frandom(-0.2,0.4));
+		---- A 3;
+		goto reloadend;
+	loadblue:
+		#### K 4 A_MuzzleClimb(frandom(-0.2,0.8),frandom(-0.2,0.4));
+		#### K 0 A_StartSound("weapons/pocket",9);
+		#### JIH 5 A_MuzzleClimb(frandom(-0.2,0.8),frandom(-0.2,0.4));
+		---- A 3;
+		---- A 0{
+				let hhh=hdweapon(findinventory("HDHealingPotion"));
+				let mwt=invoker.owner.findinventory("HDHealingPotion");
+				let FUCK=invoker.owner.findinventory("HDHealingPotion");
+				if(!mwt){
+					setweaponstate("nope");
+				}else if(mwt){
+					if(hhh){
+						invoker.potamt=hhh.weaponstatus[HDHM_AMOUNT];
+					}
+					A_DropInventory("HDHealingPotion");
+					invoker.weaponstatus[HMPS_BLUE]=invoker.potamt;
+					A_SetHelpText();
+					FUCK.Destroy();
+					A_StartSound("weapons/bottleload",8);
+					A_StartSound("potion/open",8);
+				}
+		}goto reloadend;
+	altreload:
+	swappistols:
+		---- A 0 A_SwapHandguns();
+		---- A 0{
+			bool id=(Wads.CheckNumForName("id",0)!=-1);
+			bool offhand=invoker.wronghand;
+			bool lefthanded=(id!=offhand);
+			if(lefthanded){
+				A_Overlay(1025,"raiseleft");
+				A_Overlay(1026,"lowerright");
+			}else{
+				A_Overlay(1025,"raiseright");
+				A_Overlay(1026,"lowerleft");
+			}
+		}
+		TNT1 A 5;
+		HSAC A 0 A_CheckPistolHand();
+		goto nope;
+	lowerleft:
+		HSAC A 0 A_JumpIf(Wads.CheckNumForName("id",0)!=-1,2);
+		HSA2 A 0;
+		#### E 1 offset(-6,38);
+		#### E 1 offset(-12,48);
+		#### E 1 offset(-20,60);
+		#### E 1 offset(-34,76);
+		#### E 1 offset(-50,86);
+		stop;
+	lowerright:
+		HSA2 A 0 A_JumpIf(Wads.CheckNumForName("id",0)!=-1,2);
+		HSAC A 0;
+		#### E 1 offset(6,38);
+		#### E 1 offset(12,48);
+		#### E 1 offset(20,60);
+		#### E 1 offset(34,76);
+		#### E 1 offset(50,86);
+		stop;
+	raiseleft:
+		HSAC A 0 A_JumpIf(Wads.CheckNumForName("id",0)!=-1,2);
+		HSA2 A 0;
+		#### A 1 offset(-50,86);
+		#### A 1 offset(-34,76);
+		#### A 1 offset(-20,60);
+		#### A 1 offset(-12,48);
+		#### A 1 offset(-6,38);
+		stop;
+	raiseright:
+		HSA2 A 0 A_JumpIf(Wads.CheckNumForName("id",0)!=-1,2);
+		HSAC A 0;
+		#### A 1 offset(50,86);
+		#### A 1 offset(34,76);
+		#### A 1 offset(20,60);
+		#### A 1 offset(12,48);
+		#### A 1 offset(6,38);
+		stop;
+	whyareyousmiling:
+		#### E 1 offset(0,48);
+		#### E 1 offset(0,60);
+		#### E 1 offset(0,76);
+		TNT1 A 7;
+		HSAC A 0{
+			invoker.wronghand=!invoker.wronghand;
+			A_CheckPistolHand();
+		}
+		#### E 1 offset(0,76);
+		#### E 1 offset(0,60);
+		#### E 1 offset(0,48);
+		goto nope;
+	spawn:
+		HMPT ABCD -1 nodelay{
+		if(invoker.weaponstatus[HMPS_BLUE]>=0){
+			if(invoker.weaponstatus[HMPS_CHAMBER]<2)frame=3;
+			else frame=1;
+		}else if(invoker.weaponstatus[HMPS_CHAMBER]<2)frame=2;
+		else frame=0;
+		}stop;
+	}
+	override void initializewepstats(bool idfa){
+		weaponstatus[HMPS_MAG]=12;
+		weaponstatus[HMPS_CHAMBER]=2;
+		if(weaponstatus[HMPS_BLUE]>=0)weaponstatus[HMPS_BLUE]=12;
+		else weaponstatus[HMPS_BLUE]=-1;
+	}
+	override void loadoutconfigure(string input){
+		int holy=getloadoutvar(input,"holy",1);
+		if(holy>=0){
+			weaponstatus[0]|=HMPF_HOLY;
+		}
+		int justone=getloadoutvar(input,"justone",1);
+		if(justone>=0){
+			weaponstatus[HMPS_BLUE]=1;
+		}
+		int full=getloadoutvar(input,"full",1);
+		if(full>=0){
+			weaponstatus[HMPS_BLUE]=12;
+		}
+		
+		int godcheat=getloadoutvar(input,"ikickassforthelord",1); //infiniblues
+		if(
+			godcheat>=0
+			&&pepper_cheats>0
+		){
+			weaponstatus[HMPS_CHEAT]=1;
+		}
+		else if(godcheat>0)weaponstatus[0]|=CHEATF_FAIL;
+		int dmgcheat=getloadoutvar(input,"godslamcardoor",1); //bullet HURT, thx knox
+		if(
+			dmgcheat>=0
+			&&pepper_cheats>0
+		){
+			weaponstatus[HMPS_CHEAT]=2;
+		}
+		else if(dmgcheat>0)weaponstatus[0]|=CHEATF_FAIL;
+	}
+}
+enum helzingstatus{
+	HMPF_BLUEUSE=1,
+	HMPF_JUSTUNLOAD=2,
+	HMPF_HOLY=4,
+
+	HMPS_FLAGS=0,
+	HMPS_MAG=1,
+	HMPS_CHAMBER=2, //0 empty, 1 spent, 2 loaded
+	HMPS_BLUE=3,
+	HMPS_CHEAT=4, //1 inf blue, 2 dmg up, 3 blood blues
+};
+
+class HelzingSpawn:IdleDummy{
+	states{
+	spawn:
+		TNT1 A 0 nodelay{
+			let zzz=HDHelzing(spawn("HDHelzing",pos,ALLOW_REPLACE));
+			if(!zzz)return;
+			HDF.TransferSpecials(self, zzz);
+			if(!random(0,1)){
+				zzz.weaponstatus[HMPS_BLUE]=1;
+			}if(!random(0,3)){
+				zzz.weaponstatus[HMPS_BLUE]=12;
+			}spawn("HD355Mag",pos+(8,0,0),ALLOW_REPLACE);
+			spawn("HD355Mag",pos+(5,0,0),ALLOW_REPLACE);
+			spawn("HD355Mag",pos+(3,0,0),ALLOW_REPLACE);
+		}stop;
+	}
+}
+
+
+class HelzingDrop:IdleDummy{
+	states{
+	spawn:
+		TNT1 A 0 nodelay{
+			let hel=HDHelzing(spawn("HDHelzing",pos,ALLOW_REPLACE));
+			if(!hel)return;
+			HDF.TransferSpecials(self, hel);
+			hel.weaponstatus[HMPS_BLUE]=-1;
+		}stop;
+	}
+}

@@ -1,0 +1,223 @@
+[enu default]
+
+// Any text that gets printed to the player should likely be here to be translated by other patches.
+// This means that, if anyone wanted to, they could translate Peppergrinder to other languages.
+// This also means that people can make patches to change pickup messages, obituaries, tags and more for all of these weapons.
+// Overall, it's a bit less convenient to do but it's worthwhile for modularity. - [Ted]
+
+// Menu Tag
+PEPPERGRINDER_MENU = "\c[Red]Ⓟ\c- Peppergrinder";
+
+// --------------------
+// Tags
+// --------------------
+
+PEPPER_TAG_HLAR = "HLAR";
+
+PEPPER_TAG_BASTARD = "Bastard Rifle";
+
+PEPPER_TAG_BINOCULARS = "binoculars";
+
+PEPPER_TAG_BOXCANNON = "Box Cannon 9mm";
+PEPPER_TAG_9MCLIP = "9mm clip";
+
+PEPPER_TAG_DERRINGER = "L&M Derringer";
+
+PEPPER_TAG_FULGUR = "Fulgur Laser Machinegun";
+
+PEPPER_TAG_GREELY = "Greely 12";
+
+PEPPER_TAG_GUILLOTINE = "Guillotine";
+PEPPER_TAG_NDM_MAG = "9mm NDM magazine";
+
+PEPPER_TAG_HELZING = "Helzing Magnum";
+PEPPER_TAG_355MAG = ".355 magazine";
+
+PEPPER_TAG_ILIB = "Iron sights Liberator battle rifle";
+
+PEPPER_TAG_LISA = "0H1-MK \"Lisa\" Plasma DMR";
+
+PEPPER_TAG_LOTUS = "776 Lotus Carbine";
+
+PEPPER_TAG_MAULER = "Mauler Frag Cannon";
+
+PEPPER_TAG_ODDBALL = "Oddball PDW";
+
+PEPPER_TAG_P90 = "BreakerTek P90";
+PEPPER_TAG_BIGNDMMAG = "BreakerTek Mag";
+
+PEPPER_TAG_PLASMAPISTOL = "Plasma Pistol";
+
+PEPPER_TAG_RUBYMASER = "Ruby Maser";
+
+PEPPER_TAG_SAWEDSLAYER = "Sawed-off Shotgun";
+
+PEPPER_TAG_SCOPEDREVOLVER = "Scoped Revolver";
+
+PEPPER_TAG_SCOPEDSLAYER = "Scoped side-by-side shotgun";
+
+PEPPER_TAG_TROG = "TRO-G Rifle";
+PEPPER_TAG_TROGMAG = "Vintage 4.26 magazine";
+
+PEPPER_TAG_VERA = "M764 SAW \"Vera\"";
+
+PEPPER_TAG_WISEAU = "WF-60 Plasma Magnum";
+
+PEPPER_TAG_YUREI = "Yurei High-Capacity SMG";
+PEPPER_TAG_YUREIMAG = "9mm Yurei Magazine";
+
+PEPPER_TAG_ZM94 = "ZM94 \'Sabrewolf\' AMR";
+PEPPER_TAG_ZM94_MAG = "ZM94 magazine";
+
+PEPPER_TAG_ZORCHER = "Zorcher";
+
+PEPPER_TAG_SOLNOPIS = "elite soldier kit (w/o pistol)";
+
+// --------------------
+// Pickup Messages
+// --------------------
+
+PEPPER_PICKUP_HLAR = "You got the HLAR!";
+
+PEPPER_PICKUP_BASTARD = "You found a Bastard Rifle! What a crude thing...";
+
+PEPPER_PICKUP_BINOCULARS = "You got the binoculars!";
+
+PEPPER_PICKUP_BOXCANNON_NORMAL = "You got the Box Cannon 9mm!";
+PEPPER_PICKUP_EL_CAPITAN = "You discovered an El Capitan. Watch out for wolves.";
+PEPPER_PICKUP_BOXCANNON_THEWORKS = " With the works.";
+PEPPER_PICKUP_BOXCANNON_LEON = " Leon's Choice!";
+PEPPER_PICKUP_BOXCANNON_FULLRIFLE = " Full Rifle Configuration.";
+PEPPER_PICKUP_BOXCANNON_CHICAGO = " Chicago Setup.";
+PEPPER_PICKUP_BOXCANNON_STOCK = " Complete with a Broomhandle stock.";
+PEPPER_PICKUP_BOXCANNON_MAG = " With double the magazine.";
+PEPPER_PICKUP_BOXCANNON_BARREL = " With a rifle-style barrel.";
+PEPPER_PICKUP_9MCLIP = "Picked up a 9mm clip.";
+
+PEPPER_PICKUP_DERRINGER = "You got the L&M Derringer!";
+
+PEPPER_PICKUP_FULGUR = "You got the fulgur laser machinegun!";
+
+PEPPER_PICKUP_GREELY = "You got the KAC Greely Supershorty!";
+
+PEPPER_PICKUP_GUILLOTINE = "You picked up La Petite Guillotine!";
+PEPPER_PICKUP_NDM_MAG = "Picked up a magazine of 9mm NDM.";
+
+PEPPER_PICKUP_HELZING = "You got the Helzing Magnum Pistol!";
+PEPPER_PICKUP_355MAG = "Picked up a .355 magazine.";
+
+PEPPER_PICKUP_ILIB = "You got the battle rifle! No dot sight on this one.";
+
+PEPPER_PICKUP_LISA_NORMAL = "You got the 0H1-MK \"Lisa\" Plasma DMR!";
+PEPPER_PICKUP_LISA_TECHS = " With BhO Techscope!";
+PEPPER_PICKUP_LISA_SCOPE = " With Analogue Boxscope!";
+
+PEPPER_PICKUP_LOTUS_NORMAL = "You got the Lotus Carbine!";
+PEPPER_PICKUP_SWEET_PETUNIA = "You retrieved Sweet Petunia. Hold her steady now.";
+PEPPER_PICKUP_LOTUS_SCOPE_SUPPRESSOR = " With Silencer & Scope.";
+PEPPER_PICKUP_LOTUS_SCOPE_BARREL = " With Extended Barrel & Scope.";
+PEPPER_PICKUP_LOTUS_SCOPE = " WIth BhE Mid-Range Scope.";
+PEPPER_PICKUP_LOTUS_SUPPRESSOR = " With Tsuchinoko Dual-Purpose Silencer.";
+PEPPER_PICKUP_LOTUS_BARREL = " With Distance Combat Barrel Extension.";
+
+PEPPER_PICKUP_MAULER = "You got the Mauler Frag Cannon!";
+
+PEPPER_PICKUP_ODDBALL = "You found the energy PDW!";
+
+PEPPER_PICKUP_OTIS = "You got the Otis-5 revolver!";
+
+PEPPER_PICKUP_P90 = "Picked up a BreakerTek P90!";
+PEPPER_PICKUP_BIGNDMMAG = "Picked up a plastic BreakerTek Mag.";
+
+PEPPER_PICKUP_PLASMAPISTOL = "You got the plasma pistol!";
+
+PEPPER_PICKUP_RUBYMASER_NORMAL = "You got the Rubicon AEF-322c Microwave Laser!";
+PEPPER_PICKUP_RUBYMASER_HEAVY = " Oh jeez, it's heavy...";
+PEPPER_PICKUP_RUBYMASER_EJECT = " Eject Model!";
+
+PEPPER_PICKUP_SAWEDSHOTGUN = "You got a sawed-off shotgun!";
+
+PEPPER_PICKUP_SCOPEDREVOLVER = "You got the scoped revolver!";
+
+PEPPER_PICKUP_SCOPEDSLAYER = "You got a scoped double-barreled shotgun!";
+
+PEPPER_PICKUP_TROG = "Picked up a Tactical Response Operation-Grenade rifle. It belongs in a museum...";
+PEPPER_PICKUP_TROGMAG = "Picked up a classic-style 30-round 4.26 magazine.";
+
+PEPPER_PICKUP_VERA_NORMAL = "Picked up the M764 Squad Automatic Weapon!";
+PEPPER_PICKUP_VERA_NEW = " I love it!";
+PEPPER_PICKUP_VERA_BROKEN = ". She's really been through the wringer!";
+PEPPER_PICKUP_VERA_BEATEN = ". SHe's looking pretty bad.";
+PEPPER_PICKUP_VERA_WORN = ". She could use a tune-up.";
+
+PEPPER_PICKUP_WISEAU_NORMAL = "You got the WF-60 Plasma Magnum!";
+PEPPER_PICKUP_WISEAU_DOUBLE = " Double-Double Model!";
+PEPPER_PICKUP_WISEAU_CAPACITOR = " Extra Capacitor Model!";
+PEPPER_PICKUP_WISEAU_DOUBLEACTION = " With Double-Action Trigger!";
+
+PEPPER_PICKUP_YUREI = "You got the Yurei High-Capacity SMG!";
+PEPPER_PICKUP_YUREIMAG = "Picked up a 50-round Yurei Magazine.";
+
+PEPPER_PICKUP_ZM94_NEW = "You got the ZM94 \'Sabrewolf\' anti-materiel rifle!";
+PEPPER_PICKUP_ZM94_PRISTINE = " It's in pristine shape.";
+PEPPER_PICKUP_ZM94_WORN = ". It's getting a bit worn.";
+PEPPER_PICKUP_ZM94_BEATEN = ". It's been through a lot.";
+PEPPER_PICKUP_ZM94_BROKEN = ". It might be good for a shot or two.";
+PEPPER_PICKUP_ZM94_MAG = "Picked up a 5-round .50 OMG magazine.";
+
+PEPPER_PICKUP_ZORCHER = "You got the Zorcher handheld teleporter!";
+
+// --------------------
+// Obituaries
+// --------------------
+
+PEPPER_OBITUARY_HLAR = "%o forgot about freeman, and %k, too.";
+
+PEPPER_OBITUARY_BASTARD = "%o got put into the past tense by %k.";
+
+PEPPER_OBITUARY_BINOCULARS = "how the hell was %o killed by %k's binoculars??";
+
+PEPPER_OBITUARY_BOXCANNON = "%o got outboxxed by %k's Box Cannon.";
+
+PEPPER_OBITUARY_FULGUR = "%o was hammered by %k's particle beam.";
+
+PEPPER_OBITUARY_GREELY = "%o was clowned by %k's Greely.";
+
+PEPPER_OBITUARY_GUILLOTINE = "%o suffered from %k's mechanical benefits.";
+
+PEPPER_OBITUARY_HELZING = "%o got blessed by %k's Helzing.";
+
+PEPPER_OBITUARY_LISA = "%o was marked by %k's Lisa DMR.";
+
+PEPPER_OBITUARY_LOTUS = "%o got flicked by %k's Lotus.";
+
+PEPPER_OBITUARY_MAULER = "%o just got glassed and no one leaves here till we find out %k did it!";
+PEPPER_OBITUARY_MAULER_ID = "%o was smacked by %k's big green gob.";
+
+PEPPER_OBITUARY_ODDBALL = "%o got charged by %k's Oddball.";
+
+PEPPER_OBITUARY_OTIS = "%o will look nice above %k's fireplace... if they had one.";
+
+PEPPER_OBITUARY_P90 = "%o was broken by %k's P90.";
+
+PEPPER_OBITUARY_PLASMAPISTOL = "%o got burned by %k's hot, melting plasma.";
+
+PEPPER_OBITUARY_RUBYMASER = "%o was boiled by %k's maser beam.";
+
+PEPPER_OBITUARY_SAWEDSHOTGUN = "%o choked on %k's boomstick.";
+
+PEPPER_OBITUARY_SCOPEDSLAYER = "%o underwent shotgun surgery by %k.";
+
+PEPPER_OBITUARY_SCOPEDREVOLVER = "%o got capped by %k's six-pea shooter.";
+
+PEPPER_OBITUARY_TROG = "%o was sent back to the stone age by %k.";
+
+PEPPER_OBITUARY_VERA = "%o is enjoying an extra nosehole thanks to %k.";
+
+PEPPER_OBITUARY_WISEAU = "%o was torn apart by %k's Wiseau.";
+
+PEPPER_OBITUARY_YUREI = "%o was soaked by %k's pea stream.";
+
+PEPPER_OBITUARY_ZM94 = "%o was forcefully penetrated by %k.";
+
+PEPPER_OBITUARY_ZORCHER = "%o got killed by %k with a weapon that does no damage whatsoever.";

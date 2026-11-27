@@ -1,0 +1,128 @@
+const HDMLD_PGBLUR="blr";
+const HDMLD_PGPOTION="pot";
+const HDLD_PGRANDOM="pg?";
+class Eric_Precious:HDPickupGiver{
+	default{
+		-hdpickup.fitsinbackpack
+		hdpickup.refid HDMLD_PGBLUR;
+		hdpickupgiver.pickuptogive "HDBlursphere";
+		hdpickup.bulk ENC_DERP;
+		tag "Blursphere";
+	}
+}
+
+/*class Pepper_Potion:HDPickupGiver{
+	default{
+		-hdpickup.fitsinbackpack
+		hdpickup.refid HDMLD_PGPOTION;
+		hdpickupgiver.pickuptogive "HDHealingPotion";
+		tag "Healing Potion";
+	}
+}*/
+
+class PGRandomGun : HDPickup{
+	default{
+		-hdpickup.fitsinbackpack
+		hdpickup.refid HDLD_PGRANDOM;
+		tag "Random Peppergrinder Weapon";
+	}
+	states{
+	pickup:
+		TNT1 A 0{
+			int gun = random(0, 35); //36 guns
+
+		switch (gun){
+		case 0: //9ar
+			A_GiveInventory("HDHLAR",1);
+			A_GiveInventory("HD9mMag30",1);
+			break;
+		case 1: //bst
+			A_GiveInventory("HDBastardRifle",1);
+			break;
+		case 2: //bc9
+			A_GiveInventory("HDBoxCannon",1);
+			A_GiveInventory("HD9mClip", 3);
+			break;
+		case 3: //lsm
+			A_GiveInventory("HDLaserMachinegun",1);
+			break;
+		case 4: //gre
+			A_GiveInventory("HDGreely",1);
+			A_GiveInventory("HDSlugAmmo",4);
+			A_GiveInventory("HDShelLAmmo",8);
+			break;
+		case 5: //lpg
+			A_GiveInventory("HDGuillotine",1);
+			A_GiveInventory("HDNDMMag",2);
+			break;
+		case 6: //hlz
+			A_GiveInventory("HDHelzing",1);
+			A_GiveInventory("HD355Mag",2);
+			break;
+		case 7: //ilb
+			A_GiveInventory("IronsLiberatorRifle",1);
+			A_GiveInventory("HD7mMag",1);
+			break;
+		case 8: //60d
+			A_GiveInventory("HDLisa",1);
+			break;
+		case 9: //l7c
+			A_GiveInventory("HDLotus",1);
+			A_GiveInventory("SevenMilAmmo",12);
+			break;
+		case 10: //mlr
+			A_GiveInventory("HDMauler",1);
+			break;
+		case 11: //odd
+			A_GiveInventory("HDOddball",1);
+			break;
+		case 12: //ot5
+			A_GiveInventory("HDOtisGun",1);
+			A_GiveInventory("HD500SWHeavyAmmo",5);
+			A_GiveInventory("HD500SWLightAmmo",10);
+			break;
+		case 13: //p90
+			A_GiveInventory("HDBreakerp90",1);
+			A_GiveInventory("HDNDMBigMag",1);
+			break;
+		case 14: //plp
+			A_GiveInventory("HDPlasmaPistol",1);
+			break;
+		case 15: //mas
+			A_GiveInventory("RubyMaser",1);
+			break;
+		case 16: //swd
+			A_GiveInventory("SawedSlayer",1);
+			A_GiveInventory("HDShellAmmo",8);
+			break;
+		case 17: //srv
+			A_GiveInventory("HDScopedRevolver",1);
+			A_GiveInventory("HDRevolverAmmo", 24);
+			break;
+		case 18: //scs
+			A_GiveInventory("ScopedSlayer",1);
+			break;
+		case 19: //trg
+			A_GiveInventory("HDTROGRifle",1);
+			A_GiveInventory("HDTrogMag",1);
+			break;
+		case 20: //m64
+			A_GiveInventory("HDVera",1);
+			break;
+		case 21: //wis
+			A_GiveInventory("HDWiseau",1);
+			break;
+		case 22: //yri
+			A_GiveInventory("HDYureiSMG",1);
+			A_GiveInventory("HD9mMag50",1);
+			break;
+		case 23: //z94
+			A_GiveInventory("ZM94Rifle",1);
+			A_GiveInventory("HDZM94Mag",1);
+			break;
+		default:
+			break;
+		}}
+		fail;
+	}
+}

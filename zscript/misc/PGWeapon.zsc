@@ -1,0 +1,125 @@
+class PGWeapon : HDWeapon{
+	//copied from lithium, a wrapper for stringtable.localize
+	//checks the inputted string, if it's a valid LANGUAGE entry it will return it
+	//if not, it will return the message as false and tell you to unfuck it
+	static clearScope string loc(string nm) { 
+		if(nm.charat(0)=="$"){
+			nm = nm.mid(1);
+		}
+		string rtrn=StringTable.localize(nm, false);
+		return rtrn!=nm?rtrn:""..rtrn.." doesn't exist! try inputting it into the language lump or checking your spelling!";
+	}
+	bool CustomPickupMsg;
+	property CustomPickupMsg:CustomPickupMsg;
+	//spill a single round
+	//upwards will spit the round straight upwards without taking the player's pitch into account
+	action void A_RoundVomit(string bullet, int upwards){
+		double fc=max(pitch*0.01,5);
+		double cosp=cos(pitch);
+		actor bullsp;
+		[cosp,bullsp]=A_SpawnItemEx(
+			bullet, //missile
+			cosp*12, //xoffs
+			0, //yoffs
+			height-12-sin(pitch)*12, //zoffs
+			(upwards>0?0:cosp*fc), //xvel
+			0.2*random(-3,3), //yvel
+			(upwards>0?5:-sin(pitch)*fc), //zvel
+			0,//angle
+			SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH //flags
+		);
+		bullsp.vel+=vel;
+	}
+	action void A_CheatFail(){
+		if(invoker.weaponstatus[0]&CHEATF_FAIL)
+		{
+			a_log("You need pepper_cheats on to use cheat codes, dummy!",true);
+			invoker.weaponstatus[0]&=~CHEATF_FAIL;
+		}
+	}
+	default{
+		PGWeapon.CustomPickupMsg false;
+	}
+	override string pickupmessage(){
+		String msg;
+		if(CustomPickupMsg==false){
+			return msg = ""..loc("$PICKUP_WEPGENERICSTR")..""..gettag()..""..loc("$PICKUP_WEPGENERICEND");
+		}else{
+			return PickupMsg;
+		}
+	}
+	states{
+		steamhiss:
+			CBTG I 2;
+			CBTG JKL 1;
+			stop;
+	}
+}
+class PGHandgun : HDHandgun{
+	bool CustomPickupMsg;
+	property CustomPickupMsg:CustomPickupMsg;
+	//copied from lithium, a wrapper for stringtable.localize
+	//checks the inputted string, if it's a valid LANGUAGE entry it will return it
+	//if not, it will return the message as false and tell you to unfuck it
+	static clearScope string loc(string nm) { 
+		if(nm.charat(0)=="$"){
+			nm = nm.mid(1);
+		}
+		string rtrn=StringTable.localize(nm, false);
+		return rtrn!=nm?rtrn:""..rtrn.." doesn't exist! try inputting it into the language lump or checking your spelling!";
+	}
+	action void A_CheatFail(){
+		if(invoker.weaponstatus[0]&CHEATF_FAIL)
+		{
+			a_log("You need pepper_cheats on to use cheat codes, dummy!",true);
+			invoker.weaponstatus[0]&=~CHEATF_FAIL;
+		}
+	}
+	default{
+		PGHandgun.CustomPickupMsg false;
+	}
+	override string pickupmessage(){
+		String msg;
+		if(CustomPickupMsg==false){
+			return msg = ""..loc("$PICKUP_WEPGENERICSTR")..""..gettag()..""..loc("$PICKUP_WEPGENERICEND");
+		}else{
+			return PickupMsg;
+		}
+	}
+}
+class PGShotgun : HDShotgun{
+	bool CustomPickupMsg;
+	property CustomPickupMsg:CustomPickupMsg;
+	//copied from lithium, a wrapper for stringtable.localize
+	//checks the inputted string, if it's a valid LANGUAGE entry it will return it
+	//if not, it will return the message as false and tell you to unfuck it
+	static clearScope string loc(string nm) { 
+		if(nm.charat(0)=="$"){
+			nm = nm.mid(1);
+		}
+		string rtrn=StringTable.localize(nm, false);
+		return rtrn!=nm?rtrn:""..rtrn.." doesn't exist! try inputting it into the language lump or checking your spelling!";
+	}
+	action void A_CheatFail(){
+		if(invoker.weaponstatus[0]&CHEATF_FAIL)
+		{
+			a_log("You need pepper_cheats on to use cheat codes, dummy!",true);
+			invoker.weaponstatus[0]&=~CHEATF_FAIL;
+		}
+	}
+	default{
+		PGShotgun.CustomPickupMsg false;
+	}
+	override string pickupmessage(){
+		String msg;
+		if(CustomPickupMsg==false){
+			return msg = ""..loc("$PICKUP_WEPGENERICSTR")..""..gettag()..""..loc("$PICKUP_WEPGENERICEND");
+		}else{
+			return PickupMsg;
+		}
+	}
+}
+
+enum CheatHandlerStatus{
+	CHEATF_FAIL=2048,
+}

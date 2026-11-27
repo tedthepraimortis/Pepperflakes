@@ -1,20 +1,3 @@
-// ------------------------------------------------------------
-//Tactical Response Operation-Grenade Rifle
-//The TRO-G is a business designation for a weapon otherwise known as the Lodyte AR-29. As designed by one Krognar Lodyte, and licensed out to Volt. 
-//A military man by trade, and a victim of his own circumstance. One of the earlier and surprisingly reliable adaptations of Volt 4.26 caseless. Too reliable, but not in all of the right ways. 
-//The weapon was designed during the Hive City incident, made mostly for combatting the so-called "Tykes" that ran the lower floors of the megacity. Mutated freaks, but not quite demons. 
-//4.26 sufficed well for a man and for rudimentary armor, but they would occasionally construct and sortie crude armored walkers (FUN-Es). 
-//The frangible rounds wouldn't penetrate very well, but the sheer explosive force of a grenade would topple them over, rendering them immediately useless. 
-//As such, the grenade launcher was built right into the weapon, rather than as an attachment. 
-//In a bewildering design decision, the trigger group includes the GL and rifle's triggers right next to each other, under one guard. 
-//This proved to be as disastrous under pressure as would be expected, so marines started keeping their GLs unloaded to prevent accidents. 
-//Lt. Krognar would later be killed in action during the demon invasion, having abandoned his own rifle for the heavier Liberator, he would be found lagging behind the rest of his squad, overburdened with 7.76, when he might have heard the far off cry of "Hell Knight!" from his team ahead of him. 
-//A hail of grenades flew over and around him, and he expired cursing out his team for not checking their grenade fire. 
-//When pressed for an explanation, SSgt. Eric simply replied "There was a Hell Knight." No further punishment was issued, and the rifle, along with its designer, became a footnote in Volt's history.
-// ------------------------------------------------------------
-const HDLD_TROG="trg";
-
-const HDCONST_TROGCOOKOFF=21;
 class HDTROGRifle:PGWeapon{
 	default{
 
@@ -22,14 +5,14 @@ class HDTROGRifle:PGWeapon{
 		weapon.slotnumber 4;
 		weapon.slotpriority 1.7;
 		inventory.pickupsound "misc/w_pkup";
-		inventory.pickupmessage "Picked up a Tactical Response Operation-Grenade rifle. It belongs in a museum...";
+		inventory.pickupmessage "$PEPPER_PICKUP_TROG";
 		scale 0.6;
 		weapon.bobrangex 0.22;
 		weapon.bobrangey 0.9;
 		PGweapon.CustomPickupMsg true;
-		obituary "%o was sent back to the stone age by %k.";
+		obituary "$PEPPER_OBITUARY_TROG";
 		hdweapon.refid "trg";
-		tag "TRO-G Rifle";
+		tag "$PEPPER_TAG_TROG";
 		inventory.icon "TRG1A0";
 		
 		hdweapon.loadoutcodes "

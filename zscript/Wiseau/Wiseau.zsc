@@ -1,0 +1,509 @@
+// ------------------------------------------------------------
+// WF-60 Plasma Magnum
+// ------------------------------------------------------------
+const HDLD_WISEAU="wis";
+class HDWiseau:PGHandgun{
+	default{
+		+hdweapon.fitsinbackpack
+		+hdweapon.reverseguninertia
+		scale 0.63;
+		weapon.selectionorder 2;
+		weapon.slotnumber 2;
+		weapon.slotpriority 1.1;
+		weapon.kickback 30;
+		weapon.bobrangex 0.1;
+		PGHandgun.CustomPickupMsg true;
+		weapon.bobrangey 0.6;
+		weapon.bobspeed 2.5;
+		weapon.bobstyle "normal";
+		obituary "$PEPPER_OBITUARY_WISEAU";
+		tag "$PEPPER_TAG_WISEAU";
+		hdweapon.refid HDLD_WISEAU;
+		hdweapon.barrelsize 16,0.3,0.5;
+		inventory.maxamount 3;
+		
+		hdweapon.loadoutcodes "
+			\cuda - 0/1, Double-Action Trigger
+			\cucapacitor - 0/1, Second Capacitor";
+	}
+	override double weaponbulk(){
+		return 66+(weaponstatus[1]>=0?ENC_BATTERY_LOADED:0);
+	}
+	override double gunmass(){
+		return 5+(weaponstatus[WISS_BATTERY]<0?0:2); //previous 10
+	}
+	override void postbeginplay(){
+		super.postbeginplay();
+		if(!GetCvar("sv_cheats")){	//cheatmode only
+			weaponstatus[WISS_CHEAT]=0; 
+		}
+	}
+	override void failedpickupunload(){
+		failedpickupunloadmag(WISS_BATTERY,"HDBattery");
+	}
+	override void consolidate(){
+		CheckBFGCharge(WISS_BATTERY);
+		int cap = weaponstatus[0]&WISF_CAPACITOR?12:6;
+		int missing = cap-weaponstatus[WISS_CHARGE];
+		int prc = weaponstatus[WISS_PRECHARGE];
+		if(prc>=missing){
+			weaponstatus[WISS_CHARGE]=cap;
+			weaponstatus[WISS_PRECHARGE]-=missing;
+		}
+		if(weaponstatus[WISS_BATTERY]>1&&prc<missing){
+			weaponstatus[WISS_CHARGE]=cap;
+			weaponstatus[WISS_PRECHARGE]=(6-missing+prc);
+			weaponstatus[WISS_BATTERY]--;
+		}
+	}
+	override string,double getpickupsprite(){
+		string spr;
+		if(
+			weaponstatus[WISS_BATTERY]>0
+/*			||weaponstatus[WISS_PRECHARGE]>0 // separate the britemap later so body = charge/precharge & battery = battery
+			||weaponstatus[WISS_CHARGE]>0
+*/			)spr="A";
+		else spr="B";
+		return "ENUF"..spr.."0",1.;
+	}
+	override string pickupmessage(){
+		string msg=Stringtable.Localize("$PEPPER_PICKUP_WISEAU_NORMAL");
+		if(weaponstatus[0]&WISF_DA&&weaponstatus[0]&WISF_CAPACITOR)msg=msg..Stringtable.Localize("$PEPPER_PICKUP_WISEAU_DOUBLE");
+		else if(weaponstatus[0]&WISF_CAPACITOR)msg=msg..Stringtable.Localize("$PEPPER_PICKUP_WISEAU_CAPACITOR");
+		else if(weaponstatus[0]&WISF_DA)msg=msg..Stringtable.Localize("$PEPPER_PICKUP_WISEAU_DOUBLEACTION");
+		return msg;
+	}
+	override void DrawHUDStuff(HDStatusBar sb,HDWeapon hdw,HDPlayerPawn hpl){
+		if(sb.hudlevel==1){
+			sb.drawbattery(-54,-4,sb.DI_SCREEN_CENTER_BOTTOM,reloadorder:true);
+			sb.drawnum(hpl.countinv("HDBattery"),-46,-8,sb.DI_SCREEN_CENTER_BOTTOM);
+		}
+		int bat=hdw.weaponstatus[WISS_BATTERY];
+		if(bat>0)sb.drawwepnum(bat,20);
+		else if(!bat)sb.drawstring(
+			sb.mamountfont,"000000",
+			(-16,-9),sb.DI_TEXT_ALIGN_RIGHT|sb.DI_TRANSLATABLE|sb.DI_SCREEN_CENTER_BOTTOM,
+			Font.CR_DARKGRAY
+		);
+		for(int i=clamp(hdw.weaponstatus[WISS_CHARGE],0,6);i>0;i--){
+			sb.drawrect(-15-i*4,-10,3,1);
+		}
+		for(int i=hdw.weaponstatus[WISS_CHARGE]-6;i>0;i--){
+			sb.drawrect(-15-i*4,-12,3,1);
+		}
+		if(hd_debug){
+			sb.drawnum(hdw.weaponstatus[WISS_CHARGE],-17,-22,
+				basestatusbar.DI_SCREEN_CENTER_BOTTOM);
+			sb.drawnum(hdw.weaponstatus[WISS_PRECHARGE],-26,-22,
+				basestatusbar.DI_SCREEN_CENTER_BOTTOM);
+			sb.drawnum(hdw.weaponstatus[WISS_BATTERY],-32,-22,
+				basestatusbar.DI_SCREEN_CENTER_BOTTOM);
+		}
+	}
+	override string gethelptext(){
+		return
+		LWPHELP_FIRE.."  Shoot"..(weaponstatus[0]&WISF_DA?" / Charge\n":"\n")
+		..LWPHELP_ALTFIRE.."  Charge\n"
+		..LWPHELP_ALTRELOAD.."  Quick-Swap (if available)\n"
+		..LWPHELP_RELOAD.."  Reload battery\n"
+		..LWPHELP_MAGMANAGER
+		..LWPHELP_UNLOADUNLOAD
+		..((weaponstatus[0]&WISF_CAPACITOR||weaponstatus[0]&WISF_DA)?
+		"\nInstalled Upgrades: ":"")
+		..(weaponstatus[0]&WISF_DA?"\n- Double-Action Charge Trigger":"")
+		..(weaponstatus[0]&WISF_CAPACITOR?"\n- Additional Internal Capacitor":"")
+		;
+	}
+	override void DrawSightPicture(
+		HDStatusBar sb,HDWeapon hdw,HDPlayerPawn hpl,
+		bool sightbob,vector2 bob,double fov,bool scopeview,actor hpc,string whichdot
+	){
+		int cx,cy,cw,ch;
+		[cx,cy,cw,ch]=screen.GetClipRect();
+		vector2 scc;
+		vector2 bobb=bob*1.3;
+		sb.SetClipRect(
+			-8+bob.x,-4+bob.y,16,10,
+			sb.DI_SCREEN_CENTER
+		);
+		scc=(0.4,0.9);
+
+		sb.drawimage(
+			"wisoftst",(0,0)+bobb,sb.DI_SCREEN_CENTER|sb.DI_ITEM_TOP,
+			alpha:0.9,scale:scc
+		);
+		sb.SetClipRect(cx,cy,cw,ch);
+		sb.drawimage(
+			"wisobkst",(0,0)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_TOP,
+			scale:scc
+		);
+	}
+	override void DropOneAmmo(int amt){
+		if(owner){
+			owner.A_DropInventory("HDBattery",amt);
+		}
+	}
+	override void ForceBasicAmmo(){
+		owner.A_TakeInventory("HDBattery");
+		owner.A_GiveInventory("HDBattery");
+	}
+	action void A_CheckPistolHand(){
+		if(invoker.wronghand)player.getpsprite(PSP_WEAPON).sprite=getspriteindex("WIS2A0");
+	}
+	states{
+	select0:
+		WISE A 0{
+			if(!countinv("NulledWeapon"))invoker.wronghand=false;
+			A_TakeInventory("NulledWeapon");
+			A_CheckPistolHand();
+		}
+		---- A 1 A_Raise();
+		---- A 1 A_Raise(30);
+		---- A 1 A_Raise(30);
+		---- A 1 A_Raise(24);
+		---- A 1 A_Raise(18);
+		wait;
+	deselect0:
+		WISE A 0 A_CheckPistolHand();
+		---- AAA 1 A_Lower();
+		---- A 1 A_Lower(18);
+		---- A 1 A_Lower(24);
+		---- A 1 A_Lower(30);
+		wait;
+
+	ready:
+		WISE A 0 {
+			A_CheckPistolHand();
+			A_CheatFail();
+		}
+		#### # 0 A_SetCrosshair(21);
+		#### # 1 A_WeaponReady(WRF_ALL);
+		goto readyend;
+	user3:
+		---- A 0 A_MagManager("HDBattery");
+		goto ready;
+	user2:
+	altfire:
+		---- A 0{
+			bool cpc=invoker.weaponstatus[0]&WISF_CAPACITOR;
+			if(
+				invoker.weaponstatus[WISS_CHARGE]<(cpc?12:6)
+				&&invoker.weaponstatus[WISS_BATTERY]>0
+			)setweaponstate("charge");
+		}goto nope;
+	newcharge:
+		#### A 6 A_StartSound("weapons/wiseauload",8);
+	charge:
+		---- A 0{
+			bool cpc=invoker.weaponstatus[0]&WISF_CAPACITOR;
+			if(invoker.weaponstatus[WISS_CHARGE]==(
+					cpc?12:6
+				)||(
+					invoker.weaponstatus[WISS_BATTERY]<1
+					&&invoker.weaponstatus[WISS_PRECHARGE]<1
+				))setweaponstate("nope");
+			}
+		WIS2 A 0 A_JumpIf(invoker.wronghand,2);
+		WISE A 0;
+		#### A 0 A_JumpIf(!(invoker.weaponstatus[0]&WISF_CAPACITOR),3);
+		#### D 2 offset(0,34) A_JumpIf(!PressingFire()&&!PressingAltFire(),"ready");
+		#### E 2 offset(0,37) A_JumpIf(!PressingFire()&&!PressingAltFire(),"ready");
+		#### D 3 offset(0,34) A_JumpIf(!PressingFire()&&!PressingAltFire(),"ready");
+		#### E 4 offset(0,37){
+			bool cpc=invoker.weaponstatus[0]&WISF_CAPACITOR;
+			A_MuzzleClimb(frandom(0.4,0.5),-frandom(0.6,0.8));
+			if(invoker.weaponstatus[WISS_CHARGE]<(cpc?12:6)
+			){
+				if(invoker.weaponstatus[WISS_PRECHARGE]>0){
+					invoker.weaponstatus[WISS_PRECHARGE]--;
+					invoker.weaponstatus[WISS_CHARGE]++;
+					A_StartSound("weapons/wiseauzap",8);
+				}else if(invoker.weaponstatus[WISS_BATTERY]>0){
+					invoker.weaponstatus[WISS_BATTERY]--;
+					invoker.weaponstatus[WISS_PRECHARGE]=6;
+					setweaponstate("newcharge");
+				}
+			}
+		}
+		#### A 0 A_JumpIf(PressingFire()||PressingAltFire(),"charge");
+/*		#### D 3 offset(0,35);
+		#### A 1;
+*/		goto nope;
+	althold:
+	fire:
+		---- A 0{
+			invoker.weaponstatus[0]&=~WISF_JUSTUNLOAD;
+			if(invoker.weaponstatus[WISS_CHARGE]>5)setweaponstate("shoot");
+			else if(invoker.weaponstatus[0]&WISF_DA&&invoker.weaponstatus[WISS_CHARGE]<6)setweaponstate("charge");
+		}goto nope;
+	hold:
+		---- A 0;
+		goto nope;
+	shoot:
+		---- A 0{
+			if(invoker.weaponstatus[WISS_BATTERY]<1&&invoker.weaponstatus[WISS_CHARGE]<6){
+				A_StartSound("weapons/pistoldry",8,CHANF_OVERLAP,0.9);
+				setweaponstate("nope");
+			}
+			if(invoker.weaponstatus[WISS_CHARGE]>5)A_GunFlash();
+		}
+		---- B 1{
+			if(hdplayerpawn(self)){
+				hdplayerpawn(self).gunbraced=false;
+			}
+			A_MuzzleClimb(
+				-frandom(0.8,1.),-frandom(1.2,1.6),
+				frandom(0.4,0.5),frandom(0.6,0.8)
+			);
+			invoker.weaponstatus[WISS_CHARGE]-=6;
+			if(invoker.weaponstatus[0]&WISF_DA&&PressingFire())setweaponstate("charge");
+		}
+		---- C 2;
+		#### AAAAA 5 {
+			if(PressingAltFire())setweaponstate("charge");
+			if(PressingAltReload())setweaponstate("swappistols");
+		}goto nope;
+	flash:
+		WIS2 B 0 A_JumpIf(invoker.wronghand,2);
+		WISE B 0;
+		---- A 1 bright{
+			HDFlashAlpha(64);
+			A_Light1();
+			let bbb=HDBulletActor.FireBullet(self,"HDB_PLASMAG",spread:2.,speedfactor:frandom(0.97,1.03)); //change to HDB_PLAS or something
+			A_AlertMonsters();
+			A_Quake(5,8,0,32);
+			A_ZoomRecoil(0.995);
+			A_MuzzleClimb(-frandom(0.4,1.2),-frandom(10.4,10.6));
+		}
+		---- A 0 {
+			A_StartSound("weapons/wiseauzap",9);
+			A_StartSound("weapons/wiseaufire",CHAN_WEAPON);
+			A_StartSound("weapons/wiseaufire",8,CHANF_DEFAULT,0.5);
+			}
+		---- A 0 A_Light0();
+		stop;
+	unload:
+		---- A 0{
+			invoker.weaponstatus[0]|=WISF_JUSTUNLOAD;
+			if(invoker.weaponstatus[WISS_BATTERY]>=0)setweaponstate("unmag");
+		}goto nope;
+	reload:
+		---- A 0{
+			invoker.weaponstatus[0]&=~WISF_JUSTUNLOAD;
+			bool nomags=HDMagAmmo.NothingLoaded(self,"HDBattery");
+			if(invoker.weaponstatus[WISS_BATTERY]>=20)setweaponstate("nope");
+			else if(
+				invoker.weaponstatus[WISS_BATTERY]<1
+				&&(
+					pressinguse()
+					||nomags
+				)
+			){
+				setweaponstate("nope");
+			}else if(nomags)setweaponstate("nope");
+		}goto unmag;
+	unmag:
+		---- A 1 offset(0,34) A_SetCrosshair(21);
+		---- A 1 offset(1,38);
+		---- A 2 offset(2,42);
+		---- A 3 offset(3,46) A_StartSound("weapons/pismagclick",8,CHANF_OVERLAP);
+		---- A 0{
+			int pmg=invoker.weaponstatus[WISS_BATTERY];
+			invoker.weaponstatus[WISS_BATTERY]=-1;
+			if(pmg<0)setweaponstate("magout");
+			else if(
+				(!PressingUnload()&&!PressingReload())
+				||A_JumpIfInventory("HDBattery",0,"null")
+			){
+				HDMagAmmo.SpawnMag(self,"HDBattery",pmg);
+				setweaponstate("magout");
+			}
+			else{
+				HDMagAmmo.GiveMag(self,"HDBattery",pmg);
+				A_StartSound("weapons/pocket",9);
+				setweaponstate("pocketmag");
+			}
+		}
+	pocketmag:
+		---- AAA 5 offset(0,46) A_MuzzleClimb(frandom(-0.2,0.8),frandom(-0.2,0.4));
+		goto magout;
+	magout:
+		---- A 0{
+			if(invoker.weaponstatus[0]&WISF_JUSTUNLOAD)setweaponstate("reloadend");
+			else setweaponstate("loadmag");
+		}
+
+	loadmag:
+		---- A 4 offset(0,46) A_MuzzleClimb(frandom(-0.2,0.8),frandom(-0.2,0.4));
+		---- A 0 A_StartSound("weapons/pocket",9);
+		---- A 5 offset(0,46) A_MuzzleClimb(frandom(-0.2,0.8),frandom(-0.2,0.4));
+		---- A 3;
+		---- A 0{
+			let mmm=hdmagammo(findinventory("HDBattery"));
+			if(mmm){
+				invoker.weaponstatus[WISS_BATTERY]=mmm.TakeMag(true);
+				A_StartSound("weapons/pismagclick",8);
+			}
+		}
+		goto reloadend;
+
+	reloadend:
+		---- A 2 offset(3,46);
+		---- A 1 offset(2,42);
+		---- A 1 offset(2,38);
+		---- A 1 offset(1,34);
+		goto nope;
+
+	user1:
+	altreload:
+	swappistols:
+		---- A 0 A_SwapHandguns();
+		---- A 0{
+			bool id=(Wads.CheckNumForName("id",0)!=-1);
+			bool offhand=invoker.wronghand;
+			bool lefthanded=(id!=offhand);
+			if(lefthanded){
+				A_Overlay(1025,"raiseleft");
+				A_Overlay(1026,"lowerright");
+			}else{
+				A_Overlay(1025,"raiseright");
+				A_Overlay(1026,"lowerleft");
+			}
+		}
+		TNT1 A 5;
+		WISE A 0 A_CheckPistolHand();
+		goto nope;
+	lowerleft:
+		WISE A 0 A_JumpIf(Wads.CheckNumForName("id",0)!=-1,2);
+		WIS2 A 0;
+		#### A 1 offset(-6,38);
+		#### A 1 offset(-12,48);
+		#### A 1 offset(-20,60);
+		#### A 1 offset(-34,76);
+		#### A 1 offset(-50,86);
+		stop;
+	lowerright:
+		WIS2 A 0 A_JumpIf(Wads.CheckNumForName("id",0)!=-1,2);
+		WISE A 0;
+		#### A 1 offset(6,38);
+		#### A 1 offset(12,48);
+		#### A 1 offset(20,60);
+		#### A 1 offset(34,76);
+		#### A 1 offset(50,86);
+		stop;
+	raiseleft:
+		WISE A 0 A_JumpIf(Wads.CheckNumForName("id",0)!=-1,2);
+		WIS2 A 0;
+		#### A 1 offset(-50,86);
+		#### A 1 offset(-34,76);
+		#### A 1 offset(-20,60);
+		#### A 1 offset(-12,48);
+		#### A 1 offset(-6,38);
+		stop;
+	raiseright:
+		WIS2 A 0 A_JumpIf(Wads.CheckNumForName("id",0)!=-1,2);
+		WISE A 0;
+		#### A 1 offset(50,86);
+		#### A 1 offset(34,76);
+		#### A 1 offset(20,60);
+		#### A 1 offset(12,48);
+		#### A 1 offset(6,38);
+		stop;
+	whyareyousmiling:
+		#### A 1 offset(0,48);
+		#### A 1 offset(0,60);
+		#### A 1 offset(0,76);
+		TNT1 A 7;
+		WISE A 0{
+			invoker.wronghand=!invoker.wronghand;
+			A_CheckPistolHand();
+		}
+		#### A 1 offset(0,76);
+		#### A 1 offset(0,60);
+		#### A 1 offset(0,48);
+		goto nope;
+	spawn:
+		ENUF AB -1 nodelay{
+		if(invoker.weaponstatus[WISS_BATTERY]>0
+/*			||invoker.weaponstatus[WISS_PRECHARGE]>0
+			||invoker.weaponstatus[WISS_CHARGE]>0
+*/		)frame=0;
+		else frame=1;
+		}stop;
+	}
+	override void initializewepstats(bool idfa){
+		weaponstatus[WISS_BATTERY]=20;
+		if(weaponstatus[0]&WISF_CAPACITOR)
+			weaponstatus[WISS_CHARGE]=12;
+		else weaponstatus[WISS_CHARGE]=6;
+		weaponstatus[WISS_PRECHARGE]=0;
+	}
+	override void loadoutconfigure(string input){
+		int capacitor=getloadoutvar(input,"capacitor",1);
+		if(capacitor>=0){
+			weaponstatus[0]|=WISF_CAPACITOR;
+			weaponstatus[WISS_CHARGE]=12;
+		}
+		int da=getloadoutvar(input,"da",1);
+		if(da>=0)weaponstatus[0]|=WISF_DA;	
+		int pizza=getloadoutvar(input,"cheat_ialreadyorderedapizza",1); //unimplemented
+		if(
+			pizza>=0
+			&&pepper_cheats
+		)weaponstatus[WISS_CHEAT]=1;	
+		else if(pizza>0)weaponstatus[0]|=CHEATF_FAIL;
+		int tape=getloadoutvar(input,"cheat_illrecordeverything",1); //unimplemented
+		if(
+			tape>=0
+			&&pepper_cheats
+		)weaponstatus[WISS_CHEAT]=2;
+		else if(tape>0)weaponstatus[0]|=CHEATF_FAIL;
+	}
+}
+
+class HDWiseauCap:HDWeaponGiver{ //Not implemented, gonna do this next time.
+	default{
+		tag "WF-60-2 Plasma Magnum";
+		hdweapongiver.weapontogive "HDWiseau";
+		hdweapongiver.config "capacitor";
+	}
+}
+class HDWiseauDT:HDWeaponGiver{ //Not implemented, gonna do this next time.
+	default{
+		tag "WF-60-DA Plasma Magnum";
+		hdweapongiver.weapontogive "HDWiseau";
+		hdweapongiver.config "DA";
+	}
+}
+class HDWiseauAll:HDWeaponGiver{ //Not implemented, gonna do this next time.
+	default{
+		tag "WF-60-DA2 Plasma Magnum";
+		hdweapongiver.weapontogive "HDWiseau";
+		hdweapongiver.config "dacapacitor";
+	}
+}
+
+class WiseauSpawn:IdleDummy{
+	states{
+	spawn:
+		TNT1 A 0 nodelay{
+			let zzz=HDWiseau(spawn("HDWiseau",pos,ALLOW_REPLACE));
+			if(!zzz)return;
+			HDF.TransferSpecials(self, zzz);
+			if(!random(0,3))zzz.weaponstatus[0]|=WISF_CAPACITOR;
+			if(!random(0,2))zzz.weaponstatus[0]|=WISF_DA;
+		}stop;
+	}
+}
+
+enum wiseaustatus{
+	WISF_JUSTUNLOAD=1,
+	WISF_CAPACITOR=2, //Double Capacitor Model
+	WISF_DA=4, //Double Action Trigger, fire also charges
+
+	WISS_FLAGS=0,
+	WISS_BATTERY=1,
+	WISS_CHARGE=2,
+	WISS_PRECHARGE=3,
+	WISS_CHEAT=4,
+};

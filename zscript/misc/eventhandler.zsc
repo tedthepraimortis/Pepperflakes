@@ -1,0 +1,92 @@
+class Pepper_YouNeedToLoadHDestCoreLib : HDCoreEventHandler
+{
+}
+
+class SaltInjector : StaticEventHandler
+{
+	override void WorldThingSpawned(WorldEvent e)
+	{
+		let SaltAmmo = HDAmmo(e.Thing);
+		if (SaltAmmo)
+		{
+			switch (SaltAmmo.GetClassName())
+			{
+				case 'HDRocketAmmo':
+					SaltAmmo.ItemsThatUseThis.Push("HDTROGRifle");
+					SaltAmmo.ItemsThatUseThis.Push("HDHLAR");
+					SaltAmmo.ItemsThatUseThis.Push("IronsLiberatorRifle");
+					SaltAmmo.ItemsThatUseThis.Push("HDBastardRifle");
+					break;
+				case 'FourMilAmmo':
+					SaltAmmo.ItemsThatUseThis.Push("HDTROGRifle");
+					SaltAmmo.ItemsThatUseThis.Push("IronsLiberatorRifle");
+					SaltAmmo.ItemsThatUseThis.Push("HDBastardRifle");
+					break;
+				case 'HD4mMag':
+					SaltAmmo.ItemsThatUseThis.Push("HDVera");
+					break;
+				case 'HD9mMag30':
+					SaltAmmo.ItemsThatUseThis.Push("HDHLAR");
+					break;
+				case 'HDPistolAmmo':
+					SaltAmmo.ItemsThatUseThis.Push("HDHLAR");
+					SaltAmmo.ItemsThatUseThis.Push("HDBoxCannon");
+					SaltAmmo.ItemsThatUseThis.Push("HDYureiSMG");
+					break;
+				case 'HDRevolverAmmo':
+					SaltAmmo.ItemsThatUseThis.Push("HDHelzing");
+					SaltAmmo.ItemsThatUseThis.Push("HDScopedRevolver");
+					break;
+				case 'SevenMilAmmo':
+					SaltAmmo.ItemsThatUseThis.Push("HDLotus");
+					SaltAmmo.ItemsThatUseThis.Push("IronsLiberatorRifle");
+					break;
+				case 'SevenMilAmmoRecast':
+					SaltAmmo.ItemsThatUseThis.Push("HDLotus");
+					SaltAmmo.ItemsThatUseThis.Push("IronsLiberatorRifle");
+					break;
+				case 'HD7mMag':
+					SaltAmmo.ItemsThatUseThis.Push("IronsLiberatorRifle");
+					break;
+				case 'SevenMilBrass':
+					SaltAmmo.ItemsThatUseThis.Push("IronsLiberatorRifle");
+					break;
+				case 'HDBattery':
+					SaltAmmo.ItemsThatUseThis.Push("RubyMaser");
+					SaltAmmo.ItemsThatUseThis.Push("HDVera");
+					SaltAmmo.ItemsThatUseThis.Push("HDWiseau");
+					SaltAmmo.ItemsThatUseThis.Push("HDLisa");
+					SaltAmmo.ItemsThatUseThis.Push("HDMauler");
+					SaltAmmo.ItemsThatUseThis.Push("HDPlasmaPistol");
+					SaltAmmo.ItemsThatUseThis.Push("HDZorcher");
+					SaltAmmo.ItemsThatUseThis.Push("HDLaserMachinegun");
+					break;
+				case 'HDShellAmmo':
+					SaltAmmo.ItemsThatUseThis.Push("ScopedSlayer");
+					SaltAmmo.ItemsThatUseThis.Push("HDGreely");
+					SaltAmmo.ItemsThatUseThis.Push("SawedSlayer");
+					break;
+				case 'HDSlugAmmo':
+					SaltAmmo.ItemsThatUseThis.Push("HDGreely");
+					break;
+				case 'HD500SWHeavyAmmo':
+					SaltAmmo.ItemsThatUseThis.Push("HDOtisGun");
+					break;
+				case 'HD500SWLightAmmo':
+					SaltAmmo.ItemsThatUseThis.Push("HDOtisGun");
+					break;
+                case 'HD50OMGAmmo':
+                    SaltAmmo.ItemsThatUseThis.Push("ZM94Rifle");
+                    break;
+                case 'HDZM94Mag':
+                    SaltAmmo.ItemsThatUseThis.Push("ZM94Rifle");
+                    break;
+				case 'HDNDMLoose':
+					SaltAmmo.ItemsThatUseThis.Push("HDBreakerp90");
+					SaltAmmo.ItemsThatUseThis.Push("HDGuillotine");
+					break;
+			}
+		}
+	}
+}
+

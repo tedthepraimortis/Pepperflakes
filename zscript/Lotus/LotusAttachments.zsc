@@ -1,0 +1,133 @@
+class LCBarrelKit : PGAttachment{
+	default {
+		Scale 0.8;
+		Inventory.PickupMessage "You got a Lotus Rifle Barrel Kit!";
+//		HDPickup.RefID "lcs";
+		HDPickup.Bulk 18;
+		+Inventory.InvBar;
+		+hdpickup.norandombackpackspawn;
+		Tag "Lotus Rifle Barrel";
+	}
+	action void a_activate(){
+		let sacrificeWep = HDLotus(player.readyweapon);
+		if (
+			!sacrificeWep
+			|| sacrificeWep.weaponstatus[LOTS_BARREL] == 1
+			) {
+			a_log("You need a Lotus with no rifle barrel to use this on",true);
+		}
+		else {
+			A_StartSound(PPG_AttUseSound);
+			[invoker.garbage,invoker.newgun] = self.A_SpawnItemEx("HDLotus",
+					cos(pitch)*12,0,height-8-sin(pitch)*12,
+					cos(pitch)*(random(10,20)*0.1),0.2*randompick(-1,1),-sin(pitch),
+					0,SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH
+				);
+			invoker.lotus = HDLotus(invoker.newgun);
+			invoker.lotus.weaponstatus[LOTS_CYL1] = sacrificeWep.weaponstatus[LOTS_CYL1];
+			invoker.lotus.weaponstatus[LOTS_CYL2] = sacrificeWep.weaponstatus[LOTS_CYL2];
+			invoker.lotus.weaponstatus[LOTS_CYL3] = sacrificeWep.weaponstatus[LOTS_CYL3];
+			invoker.lotus.weaponstatus[LOTS_CYL4] = sacrificeWep.weaponstatus[LOTS_CYL4];
+			invoker.lotus.weaponstatus[LOTS_CYL5] = sacrificeWep.weaponstatus[LOTS_CYL5];
+			invoker.lotus.weaponstatus[LOTS_CYL6] = sacrificeWep.weaponstatus[LOTS_CYL6];
+			
+			invoker.lotus.weaponstatus[LOTS_ZOOM] = sacrificeWep.weaponstatus[LOTS_ZOOM];
+			invoker.lotus.weaponstatus[LOTS_DROPADJUST] = sacrificeWep.weaponstatus[LOTS_DROPADJUST];
+			
+			invoker.lotus.weaponstatus[LOTS_BARREL] = 1;
+			if(sacrificeWep.weaponstatus[0]&LOTF_SCOPE)
+			{
+				invoker.lotus.weaponstatus[0]|=LOTF_SCOPE;
+			}
+			if(sacrificeWep.weaponstatus[0]&LOTF_SA)
+			{
+				invoker.lotus.weaponstatus[0]|=LOTF_SA;
+			}
+			
+			if(sacrificeWep.weaponstatus[LOTS_BARREL] == 2)
+			{
+				self.A_SpawnItemEx("LCSilencerKit",
+					cos(pitch)*12,0,height-8-sin(pitch)*12,
+					cos(pitch)*(random(10,20)*0.1),0.2*randompick(-1,1),-sin(pitch),
+					0,SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH
+				);
+			}
+			sacrificeWep.destroy();
+			self.takeinventory("LCBarrelKit",1);
+		}
+	}
+	states{
+		Spawn:
+			RRP1 B 1;
+			loop;
+		Use:
+			TNT1  A 0 a_activate();
+	}
+}
+
+class LCSilencerKit : PGAttachment{
+	default {
+		Scale 0.8;
+		Inventory.PickupMessage "You got a Tsuchinoko Silencer!";
+//		HDPickup.RefID "lcs";
+		HDPickup.Bulk 18;
+		+Inventory.InvBar;
+		+hdpickup.norandombackpackspawn;
+		Tag "Tsuchinoko Dual-Purpose Silencer";
+	}
+	action void a_activate(){
+		let sacrificeWep = HDLotus(player.readyweapon);
+		if (
+			!sacrificeWep
+			|| sacrificeWep.weaponstatus[LOTS_BARREL] == 2
+			) {
+			a_log("You need a Lotus with no silencer to use this on",true);
+		}
+		else {
+			A_StartSound(PPG_AttUseSound);
+			[invoker.garbage,invoker.newgun] = self.A_SpawnItemEx("HDLotus",
+					cos(pitch)*12,0,height-8-sin(pitch)*12,
+					cos(pitch)*(random(10,20)*0.1),0.2*randompick(-1,1),-sin(pitch),
+					0,SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH
+				);
+			invoker.lotus = HDLotus(invoker.newgun);
+			invoker.lotus.weaponstatus[LOTS_CYL1] = sacrificeWep.weaponstatus[LOTS_CYL1];
+			invoker.lotus.weaponstatus[LOTS_CYL2] = sacrificeWep.weaponstatus[LOTS_CYL2];
+			invoker.lotus.weaponstatus[LOTS_CYL3] = sacrificeWep.weaponstatus[LOTS_CYL3];
+			invoker.lotus.weaponstatus[LOTS_CYL4] = sacrificeWep.weaponstatus[LOTS_CYL4];
+			invoker.lotus.weaponstatus[LOTS_CYL5] = sacrificeWep.weaponstatus[LOTS_CYL5];
+			invoker.lotus.weaponstatus[LOTS_CYL6] = sacrificeWep.weaponstatus[LOTS_CYL6];
+			
+			invoker.lotus.weaponstatus[LOTS_ZOOM] = sacrificeWep.weaponstatus[LOTS_ZOOM];
+			invoker.lotus.weaponstatus[LOTS_DROPADJUST] = sacrificeWep.weaponstatus[LOTS_DROPADJUST];
+			
+			invoker.lotus.weaponstatus[LOTS_BARREL] = 2;
+			if(sacrificeWep.weaponstatus[0]&LOTF_SCOPE)
+			{
+				invoker.lotus.weaponstatus[0]|=LOTF_SCOPE;
+			}
+			if(sacrificeWep.weaponstatus[0]&LOTF_SA)
+			{
+				invoker.lotus.weaponstatus[0]|=LOTF_SA;
+			}
+			
+			if(sacrificeWep.weaponstatus[LOTS_BARREL] == 1)
+			{
+				self.A_SpawnItemEx("LCBarrelKit",
+					cos(pitch)*12,0,height-8-sin(pitch)*12,
+					cos(pitch)*(random(10,20)*0.1),0.2*randompick(-1,1),-sin(pitch),
+					0,SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH
+				);
+			}
+			sacrificeWep.destroy();
+			self.takeinventory("LCSilencerKit",1);
+		}
+	}
+	states{
+		Spawn:
+			RRP1 C 1;
+			loop;
+		Use:
+			TNT1  A 0 a_activate();
+	}
+}

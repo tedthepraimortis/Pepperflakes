@@ -1,0 +1,209 @@
+class HDBinoculars:HDWeapon{
+	int rangefinder;
+	int shieldfinder;
+	bool woodfinder;
+	default{
+		+hdweapon.fitsinbackpack
+		tag "$PEPPER_TAG_BINOCULARS";
+		scale 0.3;
+		hdweapon.barrelsize 8,1,1;
+		obituary "$PEPPER_OBITUARY_BINOCULARS";
+		inventory.pickupmessage "$PEPPER_PICKUP_BINOCULARS";
+		+inventory.invbar
+		hdweapon.refid "bnc";
+
+		hdweapon.loadoutcodes "
+			\culowres - 0/1, low resolution version";
+	}
+	override double weaponbulk(){
+		return 24;
+	}
+	override string gethelptext(){
+		return
+		LWPHELP_ZOOM.."  Use Binoculars\n"
+		..LWPHELP_ZOOM.."+"..LWPHELP_FIREMODE.."  Zoom\n"
+		;
+	}
+	override string,double getpickupsprite(){return "BINPA0",0.5;}
+	override void DrawHUDStuff(HDStatusBar sb,HDWeapon hdw,HDPlayerPawn hpl){
+		sb.drawstring(
+			sb.mAmountFont,string.format("%.1f",hdw.weaponstatus[BINOS_ZOOM]*0.1),
+			(-36,-18),sb.DI_SCREEN_CENTER_BOTTOM|sb.DI_TEXT_ALIGN_RIGHT,Font.CR_DARKGRAY
+		);
+/*		sb.drawstring(
+			sb.mAmountFont,string.format("%.1f",binodis),
+			(-36,-24),sb.DI_SCREEN_CENTER_BOTTOM|sb.DI_TEXT_ALIGN_RIGHT,Font.CR_DARKGRAY
+		);
+*/
+	}
+	override void DrawSightPicture(
+		HDStatusBar sb,HDWeapon hdw,HDPlayerPawn hpl,
+		bool sightbob,vector2 bob,double fov,bool scopeview,actor hpc,string whichdot
+	){
+		if(scopeview){
+			double degree=0.5*hdw.weaponstatus[BINOS_ZOOM];
+			double deg=1/degree;
+//			double dgr=string.format("%.1f",degree);
+			int cx,cy,cw,ch;
+			[cx,cy,cw,ch]=screen.GetClipRect();
+			sb.SetClipRect(-160+bob.x,-62+bob.y,320,140,
+				sb.DI_SCREEN_CENTER);
+
+			if(weaponstatus[0]&BINOF_LOWRES){
+				texman.setcameratotexture(hpc,"BINOCAM_L",degree);
+				sb.drawimage(
+				"BINOCAM_L",(0,0)+bob,
+				sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,
+				scale:(0.5,0.6)
+			);
+			}
+			else{
+			texman.setcameratotexture(hpc,"BINOCAM",degree);
+			sb.drawimage(
+				"BINOCAM",(0,0)+bob,
+				sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,
+				scale:(0.125,0.15)
+			);
+			}
+			sb.SetClipRect(-200+bob.x,-80+bob.y,400,180,
+				sb.DI_SCREEN_CENTER);
+			sb.drawimage(
+				"reticle1",(0,0)+bob,
+				sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,
+				scale:(0.5,0.5)
+			);
+			screen.SetClipRect(cx,cy,cw,ch);
+			sb.drawimage(
+				"binsigt",(0,8)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,
+				scale:(1.5,1.5)
+			);
+/*			sb.drawstring(
+				sb.mAmountFont,string.format("%.1f",degree),
+				(5+bob.x,2+bob.y),sb.DI_SCREEN_CENTER|sb.DI_SCREEN_CENTER,
+				Font.CR_BLACK
+			);
+*/			sb.drawnum(degree,
+				bob.x-46,2+bob.y,sb.DI_SCREEN_CENTER,
+				Font.CR_GRAY,0.4
+			);
+			let bino=HDBinoculars(hdw);
+			sb.drawnum(min(bino.rangefinder,999),
+				52+bob.x,2+bob.y,sb.DI_SCREEN_CENTER,
+				Font.CR_GRAY,0.4
+			);
+			
+			///Shield stuff
+			if(bino.shieldfinder>=0){
+				sb.drawnum(min(bino.shieldfinder,9999),
+					bob.x-4,2+bob.y,sb.DI_SCREEN_CENTER,
+					Font.CR_GREEN,0.4
+				);
+			}
+			
+			//Hurtfloor stuff
+			if(weaponstatus[BINOS_DANGER] > 0){
+				//sb.drawrect(2,3,7,7,sb.DI_SCREEN_CENTER);
+				if(weaponstatus[BINOS_DANGER] >= 100){ //killfloor
+					sb.drawimage(
+						"BINCAUT4",(6,7)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER
+					);
+				}
+				else if(weaponstatus[BINOS_DANGER] >= 20){
+					sb.drawimage(
+						"BINCAUT3",(6,7)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER
+					);
+				}
+				else if(weaponstatus[BINOS_DANGER] >= 10){
+					sb.drawimage(
+						"BINCAUT2",(6,7)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER
+					);
+				}
+				else{
+					sb.drawimage(
+						"BINCAUT",(6,7)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER
+					);
+				}
+			}
+			
+			if(pepper_cheats&&bino.woodfinder){
+				sb.drawstring(
+					sb.pSmallFont,string.format("YEP, ITS WOOD.",degree),
+					(-46+bob.x,48+bob.y),sb.DI_SCREEN_CENTER|sb.DI_SCREEN_CENTER,
+					Font.CR_TAN
+				);
+			}
+		}
+	}
+	override void InitializeWepStats(bool idfa){
+		weaponstatus[BINOS_ZOOM]=100;
+	}
+	override void loadoutconfigure(string input){
+		int lowres=getloadoutvar(input, "lowres", 1);
+		if(!lowres)weaponstatus[0]&=~BINOF_LOWRES;
+		else if(lowres>0)weaponstatus[0]|=BINOF_LOWRES;
+	}
+	states{
+	spawn:
+		BINP A -1;
+		stop;
+	select0:
+		BINO A 1 A_Raise();
+		---- A 1 A_Raise(30);
+		---- A 1 A_Raise(30);
+		---- A 1 A_Raise(24);
+		---- A 1 A_Raise(18);
+		wait;
+	deselect0:
+		BINO AAA 1 A_Lower();
+		---- A 1 A_Lower(18);
+		---- A 1 A_Lower(24);
+		---- A 1 A_Lower(30);
+		wait;
+	ready:
+		BINO A 1{
+			flinetracedata frt;
+				linetrace(
+					angle,1024*HDCONST_ONEMETRE,pitch,flags:TRF_NOSKY,
+					offsetz:height-6,
+					data:frt
+				);
+				if(frt.hitactor){
+					if(HDMobBase(frt.hitactor) && frt.hitactor.findinventory("HDMagicShield")){
+						let shields=frt.hitactor.findinventory("HDMagicShield");
+						if(shields.amount>0){
+							invoker.shieldfinder=shields.amount;
+						}
+					}
+				}
+				else invoker.shieldfinder=-1;
+				
+				if(frt.hittype == TRACE_HitFloor){
+					if(frt.hitsector.damageamount > 0){
+						invoker.weaponstatus[BINOS_DANGER] = frt.hitsector.damageamount;
+					}
+					else invoker.weaponstatus[BINOS_DANGER] = 0;
+				}
+				else invoker.weaponstatus[BINOS_DANGER] = 0;
+				
+				if(frt.hitactor){
+					if(HDTree(frt.hitactor))invoker.woodfinder=true;
+				}
+				else invoker.woodfinder=false;
+				
+				invoker.rangefinder=int(frt.distance*(1./HDCONST_ONEMETRE));
+				if(pressingzoom()){
+					A_ZoomAdjust(BINOS_ZOOM,1,100);
+					A_WeaponReady(WRF_NONE);
+				}
+				else A_WeaponReady(WRF_ALL);
+			}
+		goto readyend;
+	}
+}
+enum BinocularStats{
+	BINOF_LOWRES=1,
+
+	BINOS_ZOOM=1,
+	BINOS_DIST=2,
+	BINOS_DANGER=3,
+}

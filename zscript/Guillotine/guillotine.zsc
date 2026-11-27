@@ -1,7 +1,4 @@
-const HDLD_GUIL="lpg";
-
-const HDLD_GMAG="n15";
-// No more yap sesh lemme edit this shit - [Tavi]
+// less yap more file - tavi
 class HDGuillotine:HDHandgun{
 	default{
 		+hdweapon.fitsinbackpack
@@ -15,9 +12,9 @@ class HDGuillotine:HDHandgun{
 		weapon.bobrangey 0.6;
 		weapon.bobspeed 2.5;
 		weapon.bobstyle "normal";
-		obituary "%o suffered from %k's mechanical benefits.";
-		inventory.pickupmessage "You picked up La Petite Guillotine!";
-		tag "Guillotine";
+		obituary "$PEPPER_OBITUARY_GUILLOTINE";
+		inventory.pickupmessage "$PEPPER_PICKUP_GUILLOTINE";
+		tag "$PEPPER_TAG_GUILLOTINE";
 		hdweapon.refid "lpg";
 		hdweapon.barrelsize 20,0.3,0.5;
 		inventory.maxamount 3;
@@ -61,13 +58,14 @@ class HDGuillotine:HDHandgun{
 		if(hdw.weaponstatus[GILS_CHAMBER]==2)sb.drawrect(-19,-11,3,1);
 	}
 	override string gethelptext(){
+		LocalizeHelp();
 		return
-		WEPHELP_FIRESHOOT
-		..WEPHELP_ALTRELOAD.."  Quick-Swap (if available)\n"
-		..WEPHELP_RELOAD.."  Reload mag\n"
-		..WEPHELP_USE.."+"..WEPHELP_RELOAD.."  Reload chamber\n"
-		..WEPHELP_MAGMANAGER
-		..WEPHELP_UNLOADUNLOAD
+		LWPHELP_FIRESHOOT
+		..LWPHELP_ALTRELOAD..StringTable.Localize("$PISWH_ALTRELOAD")
+		..LWPHELP_RELOAD..StringTable.Localize("$PISWH_RELOAD")
+		..LWPHELP_USE.."+"..LWPHELP_RELOAD..StringTable.Localize("$PISWH_UPRELOAD")
+		..LWPHELP_MAGMANAGER
+		..LWPHELP_UNLOADUNLOAD
 		;
 	}
 	
@@ -439,9 +437,9 @@ class HDNDMMag:HDMagAmmo{
 		hdmagammo.roundtype "HDNDMLoose";
 		hdmagammo.roundbulk ENC_9_LOADED;
 		hdmagammo.magbulk ENC_9MAG_EMPTY;
-		tag "9mm NDM magazine";
-		inventory.pickupmessage "Picked up a magazine of 9mm NDM.";
-		hdpickup.refid HDLD_GMAG;
+		tag "$PEPPER_TAG_NDM_MAG";
+		inventory.pickupmessage "$PEPPER_PICKUP_NDM_MAG";
+		hdpickup.refid "n15";
 	}
 	override string,string,name,double getmagsprite(int thismagamt){
 		string magsprite=(thismagamt>0)?"GMAGNORM":"GMAGEMPTY";
@@ -485,7 +483,7 @@ class GuillotineSpawn:IdleDummy{
 	}
 }
 
-enum pistolstatus{
+enum guillotinestatus{
 	GILF_JUSTUNLOAD=1,
 
 	GILS_FLAGS=0,

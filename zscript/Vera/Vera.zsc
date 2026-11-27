@@ -1,4 +1,3 @@
-// no more yapping >:( - [Ted]
 enum verastatus{
 	VERAF_FAST=1,
 	VERAF_SPINNINGFAST=2,
@@ -21,7 +20,6 @@ enum verastatus{
 	VERAS_BREAKCHANCE=10,
 };
 
-const HDLD_VERA="m64";
 class HDVera:PGweapon{
 	default{
 		//$Category "Weapons/Hideous Destructor"
@@ -29,7 +27,6 @@ class HDVera:PGweapon{
 		//$Sprite "VULCA0"
 
 		scale 0.8;
-		inventory.pickupmessage "Picked up the M764 Squad Automatic Weapon!";
 		weapon.selectionorder 40;
 		weapon.slotnumber 4;
 		weapon.slotpriority 1.4;
@@ -38,24 +35,24 @@ class HDVera:PGweapon{
 		weapon.bobrangey 1.1;
 		weapon.bobspeed 2.5;
 		weapon.bobstyle "normal";
-		obituary "%o is enjoying an extra nosehole thanks to %k.";
+		obituary "$PEPPER_OBITUARY_VERA";
 		hdweapon.barrelsize 29,2,3;
 		hdweapon.refid "m64";
-		tag "M764 SAW \"Vera\"";
+		tag "$PEPPER_TAG_VERA";
 	}
 	override bool AddSpareWeapon(actor newowner){return AddSpareWeaponRegular(newowner);}
 	override hdweapon GetSpareWeapon(actor newowner,bool reverse,bool doselect){return GetSpareWeaponRegular(newowner,reverse,doselect);}
 	override string pickupmessage(){
-        string msg=super.pickupmessage();
+		string msg=Stringtable.Localize("$PEPPER_PICKUP_VERA_NORMAL");
 		int bc=weaponstatus[VERAS_BREAKCHANCE];
 		if(bc>50){
 			msg.replace("!","");
 			msg.replace("the","a");
 		}
-		if(!bc)msg=msg.." I love it!";
-		else if(bc>200)msg=msg..". She's really been through the wringer!";
-		else if(bc>100)msg=msg..". She's looking pretty bad.";
-		else if(bc>50)msg=msg..". She could use a tune-up.";
+		if(!bc)msg=msg..Stringtable.Localize("$PEPPER_PICKUP_VERA_NEW");
+		else if(bc>200)msg=msg..Stringtable.Localize("$PEPPER_PICKUP_VERA_BROKEN");
+		else if(bc>100)msg=msg..Stringtable.Localize("$PEPPER_PICKUP_VERA_BEATEN");
+		else if(bc>50)msg=msg..Stringtable.Localize("$PEPPER_PICKUP_VERA_WORN");
 		return msg;
 	}
 	override void tick(){

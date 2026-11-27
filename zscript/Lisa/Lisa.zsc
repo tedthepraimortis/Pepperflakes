@@ -1,0 +1,607 @@
+// // ------------------------------------------------------------
+// 0H1-MK "Lisa" Plasma DMR
+// ------------------------------------------------------------
+const HDLD_LISA="60d";
+class HDLisa:HDWeapon{
+	int shieldfinder;
+	default{
+		scale 0.63;
+		weapon.selectionorder 13;
+		weapon.slotnumber 8;
+		weapon.slotpriority 3;
+		weapon.kickback 30;
+		weapon.bobrangex 0.36;
+		weapon.bobrangey 0.92;
+		weapon.bobstyle "normal";
+		obituary "$PEPPER_OBITUARY_LISA";
+		tag "$PEPPER_TAG_LISA";
+		hdweapon.refid HDLD_LISA;
+		hdweapon.barrelsize 34,3,6;
+		inventory.maxamount 3;
+		
+		hdweapon.loadoutcodes "
+			\cuzoom - 16-70, 10x the resulting FOV in degrees
+			\cunoscope - Removes Scope
+			\cunotech - Analogue Scope";
+			//		cuda - 0/1, Double-Action Trigger
+	}
+	override double weaponbulk(){
+		return 125+(weaponstatus[0]&TOMF_SCOPE?10:0)+(weaponstatus[1]>=0?ENC_BATTERY_LOADED:0);
+	}
+	override double gunmass(){
+		return 12+(weaponstatus[TOMS_BATTERY]<0?0:2);
+	}
+	override void failedpickupunload(){
+		failedpickupunloadmag(TOMS_BATTERY,"HDBattery");
+	}
+	override void consolidate(){
+		CheckBFGCharge(TOMS_BATTERY);
+		int missing = 6-weaponstatus[TOMS_CHARGE];
+		int prc = weaponstatus[TOMS_PRECHARGE];
+		if(prc>=missing){
+			weaponstatus[TOMS_CHARGE]=6;
+			weaponstatus[TOMS_PRECHARGE]-=missing;
+		}
+		if(weaponstatus[TOMS_BATTERY]>1&&prc<missing){
+			weaponstatus[TOMS_CHARGE]=6;
+			weaponstatus[TOMS_PRECHARGE]=(6-missing+prc);
+			weaponstatus[TOMS_BATTERY]--;
+		}
+	}
+	override void postbeginplay(){
+		super.postbeginplay();
+		weaponspecial=1337;
+		if(weaponstatus[0]&TOMF_SCOPE){
+			bobrangex*=1.05;
+			bobrangey*=1.2;
+		}
+	}
+	override string,double getpickupsprite(){
+		string spr;
+		if(
+			weaponstatus[TOMS_BATTERY]>0
+/*			||weaponstatus[TOMS_PRECHARGE]>0
+			||weaponstatus[TOMS_CHARGE]>0
+*/			){
+			if(weaponstatus[0]&TOMF_SCOPE)spr="C";
+			else spr="A";
+		}else if(weaponstatus[0]&TOMF_SCOPE)spr="D";
+		else spr="B";
+		return "TOMP"..spr.."0",1.;
+	}
+	override string pickupmessage(){
+		string msg=Stringtable.Localize("$PEPPER_PICKUP_LISA_NORMAL");
+		if(weaponstatus[0]&TOMF_SCOPE){
+			if(weaponstatus[0]&TOMF_TECHS){
+				msg=msg..Stringtable.Localize("$PEPPER_PICKUP_LISA_TECHS");
+			}else{
+				msg=msg..Stringtable.Localize("$PEPPER_PICKUP_LISA_SCOPE");
+			}
+		}
+		return msg;
+	}
+	override void DrawHUDStuff(HDStatusBar sb,HDWeapon hdw,HDPlayerPawn hpl){
+		if(sb.hudlevel==1){
+			sb.drawbattery(-54,-4,sb.DI_SCREEN_CENTER_BOTTOM,reloadorder:true);
+			sb.drawnum(hpl.countinv("HDBattery"),-46,-8,sb.DI_SCREEN_CENTER_BOTTOM);
+		}
+		int bat=hdw.weaponstatus[TOMS_BATTERY];
+		if(bat>0)sb.drawwepnum(bat,20);
+		else if(!bat)sb.drawstring( //empty battery
+			sb.mamountfont,"000000",
+			(-16,-9),sb.DI_TEXT_ALIGN_RIGHT|sb.DI_TRANSLATABLE|sb.DI_SCREEN_CENTER_BOTTOM,
+			Font.CR_DARKGRAY
+		);
+		for(int i=hdw.weaponstatus[TOMS_CHARGE];i>0;i--){ //charge bar
+			sb.drawrect(-15-i*4,-10,3,1);
+		}
+		for(int i=hdw.weaponstatus[TOMS_QUEUE];i>0;i--){ //queue bar
+			sb.drawrect(-15-i*4,-13,3,1);
+		}
+		sb.drawwepcounter(hdw.weaponstatus[0]&TOMF_FIREMODE, //firemode selector
+			-16,-14,"RBRSA3A7","STFULAUT"
+		);
+		//lockbar stuff
+		sb.drawrect(-15.5,-6,2,1); //right side
+		sb.drawrect(-14.5,-11,0.9,5);
+		
+		sb.drawrect(-42,-6,2,1); //left side
+		sb.drawrect(-42,-11,1,5);
+		
+		if(hdw.weaponstatus[0]&TOMF_FIREMODE){
+			sb.drawrect(-15.5,-11,2,1); //top lines, auto
+			sb.drawrect(-42,-11,2,1);
+		}
+		else{
+			sb.drawrect(-15.5,-14,2,1); //top lines, single
+			sb.drawrect(-42,-14,2,1);
+			
+			sb.drawrect(-14.5,-14,0.9,5); //sidelines, single
+			sb.drawrect(-42,-14,1,3);
+		}
+		
+		if(hd_debug){
+			sb.drawnum(hdw.weaponstatus[TOMS_CHARGE],-17,-22,
+				basestatusbar.DI_SCREEN_CENTER_BOTTOM);
+			sb.drawnum(hdw.weaponstatus[TOMS_PRECHARGE],-23,-22,
+				basestatusbar.DI_SCREEN_CENTER_BOTTOM);
+			sb.drawnum(hdw.weaponstatus[TOMS_QUEUE],-17,-28,
+				basestatusbar.DI_SCREEN_CENTER_BOTTOM);
+			sb.drawnum(hdw.weaponstatus[TOMS_BATTERY],-23,-28,
+				basestatusbar.DI_SCREEN_CENTER_BOTTOM);
+		}
+		
+		if(weaponstatus[0]&TOMF_SCOPE)sb.drawnum(hdw.weaponstatus[TOMS_ZOOM], //zoom value
+			-34,-22,sb.DI_SCREEN_CENTER_BOTTOM|sb.DI_TEXT_ALIGN_RIGHT,Font.CR_DARKGRAY
+		);
+	}
+	override string gethelptext(){
+		return
+		LWPHELP_FIRE.."  Shoot / Charge\n"
+		..LWPHELP_ALTFIRE.."  Charge\n"
+		..LWPHELP_RELOAD.."  Reload battery\n"
+		..LWPHELP_FIREMODE.."  Switch to "..(weaponstatus[0]&TOMF_FIREMODE?"Single":"Auto").." mode\n"
+		..LWPHELP_MAGMANAGER
+		..LWPHELP_UNLOADUNLOAD
+		..((weaponstatus[0]&TOMF_SCOPE)?
+		"\nInstalled Upgrades: ":"")
+		..((weaponstatus[0]&TOMF_SCOPE&&!(weaponstatus[0]&TOMF_TECHS))?"\n- Analogue Boxscope":"")
+		..(weaponstatus[0]&TOMF_TECHS?"\n- BhO Readout Techscope":"")
+		;
+	}
+	override void DrawSightPicture(
+		HDStatusBar sb,HDWeapon hdw,HDPlayerPawn hpl,
+		bool sightbob,vector2 bob,double fov,bool scopeview,actor hpc,string whichdot
+	){
+		int cx,cy,cw,ch;
+		[cx,cy,cw,ch]=screen.GetClipRect();
+		vector2 scc;
+		vector2 bobb=bob*1.3;
+		int scaledyoffset=47;
+		sb.SetClipRect(
+			-8+bob.x,-4+bob.y,16,10,
+			sb.DI_SCREEN_CENTER
+		);
+		scc=(0.4,0.9);
+
+		sb.drawimage(
+			"lisaftst",(0,0)+bobb,sb.DI_SCREEN_CENTER|sb.DI_ITEM_TOP,
+			alpha:0.9,scale:scc
+		);
+		sb.SetClipRect(cx,cy,cw,ch);
+		sb.drawimage(
+			"lisabkst",(0,0)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_TOP,
+			scale:(0.6,0.9)
+		);
+		if(scopeview&&hdw.weaponstatus[0]&TOMF_SCOPE){
+			int chrg=hdw.weaponstatus[TOMS_CHARGE];
+			int pre=hdw.weaponstatus[TOMS_PRECHARGE];
+			int que=hdw.weaponstatus[TOMS_QUEUE];
+			int bat=hdw.weaponstatus[TOMS_BATTERY];
+			double degree=(hdw.weaponstatus[TOMS_ZOOM])*0.1;
+			double ammoval=(bat>0?(bat*2):0)+((chrg+pre>5)?1:0)+que+((chrg+pre==12)?1:0);
+			
+			int scaledwidth=72;
+			int cx,cy,cw,ch;
+			[cx,cy,cw,ch]=screen.GetClipRect();
+			sb.SetClipRect(
+				-36+bob.x,11+bob.y,scaledwidth,scaledwidth,
+				sb.DI_SCREEN_CENTER
+			);
+
+
+			sb.fill(color(255,0,0,0),
+				bob.x-36,scaledyoffset+bob.y-35,
+				72,72,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER
+			);
+
+			texman.setcameratotexture(hpc,"HDXCAM_ZM66",degree);
+			let cam  = texman.CheckForTexture("HDXCAM_ZM66",TexMan.Type_Any);
+
+			vector2 frontoffs=(0,scaledyoffset)+bob*2;
+
+			double camSize = texman.GetSize(cam);
+			sb.DrawCircle(cam,frontoffs,.08825,usePixelRatio:true);
+			screen.SetClipRect(cx,cy,cw,ch);
+			sb.drawimage(
+				"bossscope",(0,scaledyoffset)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,
+				scale:(0.92,0.92)
+			);
+			sb.drawimage(
+				"lisscop",(0,scaledyoffset)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,scale:(1.25,1.25)
+			);
+			int charge=hdw.weaponstatus[TOMS_CHARGE];
+			int queue=hdw.weaponstatus[TOMS_QUEUE];
+			if(hdw.weaponstatus[0]&TOMF_TECHS&&charge>0){
+				if(charge>5)sb.drawimage(
+					"lisscop6",(0,scaledyoffset)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,scale:(1.25,1.25)
+				);
+				else if(charge>4)sb.drawimage(
+					"lisscop5",(0,scaledyoffset)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,scale:(1.25,1.25)
+				);
+				else if(charge>3)sb.drawimage(
+					"lisscop4",(0,scaledyoffset)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,scale:(1.25,1.25)
+				);
+				else if(charge>2)sb.drawimage(
+					"lisscop3",(0,scaledyoffset)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,scale:(1.25,1.25)
+				);
+				else if(charge>1)sb.drawimage(
+					"lisscop2",(0,scaledyoffset)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,scale:(1.25,1.25)
+				);
+				else sb.drawimage(
+					"lisscop1",(0,scaledyoffset)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,scale:(1.25,1.25)
+				);
+			}
+			if(hdw.weaponstatus[0]&TOMF_TECHS&&queue>0){
+				if(queue>5)sb.drawimage(
+					"lisscopf",(0,scaledyoffset)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,scale:(1.25,1.25)
+				);
+				else if(queue>4)sb.drawimage(
+					"lisscope",(0,scaledyoffset)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,scale:(1.25,1.25)
+				);
+				else if(queue>3)sb.drawimage(
+					"lisscopd",(0,scaledyoffset)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,scale:(1.25,1.25)
+				);
+				else if(queue>2)sb.drawimage(
+					"lisscopc",(0,scaledyoffset)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,scale:(1.25,1.25)
+				);
+				else if(queue>1)sb.drawimage(
+					"lisscopb",(0,scaledyoffset)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,scale:(1.25,1.25)
+				);
+				else sb.drawimage(
+					"lisscopa",(0,scaledyoffset)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,scale:(1.25,1.25)
+				);
+			}
+			if(shieldfinder>0 && shieldfinder<240){
+				sb.drawimage(
+					"lscch7",(0,scaledyoffset)+bob,sb.DI_SCREEN_CENTER|sb.DI_ITEM_CENTER,scale:(1.25,1.25)
+				);
+			}
+			sb.drawstring(
+				sb.mAmountFont,string.format("%.1f",degree),
+				(5.5+bob.x,79+bob.y),sb.DI_SCREEN_CENTER|sb.DI_TEXT_ALIGN_RIGHT,
+				Font.CR_BLACK
+			);
+			if(hdw.weaponstatus[0]&TOMF_TECHS)sb.drawstring(
+				sb.mAmountFont,string.format("%1.f",ammoval),
+				(-28+bob.x,75+bob.y),sb.DI_SCREEN_CENTER|sb.DI_TEXT_ALIGN_RIGHT,
+				Font.CR_CYAN
+			);
+			if(hdw.weaponstatus[0]&TOMF_TECHS)sb.drawstring(
+				sb.mAmountFont,string.format("%01.f",pre),
+				(35+bob.x,75+bob.y),sb.DI_SCREEN_CENTER|sb.DI_TEXT_ALIGN_RIGHT,
+				Font.CR_CYAN
+			);
+		}
+	}
+	override void DropOneAmmo(int amt){
+		if(owner){
+			owner.A_DropInventory("HDBattery",amt);
+		}
+	}
+	override void ForceBasicAmmo(){
+		owner.A_TakeInventory("HDBattery");
+		owner.A_GiveInventory("HDBattery");
+	}
+	action void A_LisaCharge(){ //
+		if(
+			invoker.weaponstatus[TOMS_QUEUE]>0
+			&&invoker.weaponstatus[TOMS_CHARGE]<1
+			){
+				invoker.weaponstatus[TOMS_QUEUE]--;
+				invoker.weaponstatus[TOMS_CHARGE]=6;
+			}
+	}
+	override bool AddSpareWeapon(actor newowner){return AddSpareWeaponRegular(newowner);}
+	override hdweapon GetSpareWeapon(actor newowner,bool reverse,bool doselect){return GetSpareWeaponRegular(newowner,reverse,doselect);}
+	states{
+	select0:
+		BGSU A 0 A_JumpIf(!(invoker.weaponstatus[0]&TOMF_SCOPE),2);
+		BGS2 A 0;
+		#### A 0;
+		goto select0big;
+	deselect0:
+		BGSU A 0 A_JumpIf(!(invoker.weaponstatus[0]&TOMF_SCOPE),2);
+		BGS2 A 0;
+		#### A 0;
+		goto deselect0big;
+	ready:
+		BGSU A 0 A_JumpIf(!(invoker.weaponstatus[0]&TOMF_SCOPE),2);
+		BGS2 A 0;
+		#### A 0 A_SetCrosshair(21);
+		#### A 0{
+			flinetracedata frt;
+			linetrace(
+					angle,512*HDCONST_ONEMETRE,pitch,flags:TRF_NOSKY,
+					offsetz:height-6,
+					data:frt
+				);
+			if(frt.hitactor){
+				if(HDMobBase(frt.hitactor) && frt.hitactor.findinventory("HDMagicShield")){
+					let shields=frt.hitactor.findinventory("HDMagicShield");
+					if(shields.amount>0){
+						invoker.shieldfinder=shields.amount;
+					}
+				}
+			}
+			else {invoker.shieldfinder=-1;}
+		}
+		#### # 1{
+			A_LisaCharge();
+			if(pressingzoom()&&invoker.weaponstatus[0]&TOMF_SCOPE)A_ZoomAdjust(TOMS_ZOOM,16,70);
+			else {
+				A_WeaponReady(WRF_ALL);
+			}
+		}goto readyend;
+	user3:
+		---- A 0 A_MagManager("HDBattery");
+		goto ready;
+	user2:
+	firemode:
+		---- A 0{
+			invoker.weaponstatus[0]^=TOMF_FIREMODE;
+			A_SetHelpText();
+		}goto nope;
+	altfire:
+		---- A 0{
+			if(
+				invoker.weaponstatus[TOMS_CHARGE]<6
+				&&invoker.weaponstatus[TOMS_BATTERY]>0
+			)setweaponstate("charge");
+		}goto nope;
+	altfire:
+		---- A 0 A_LisaCharge();
+	charge:
+		---- A 0 A_JumpIf(
+			( //full queue & charge
+				invoker.weaponstatus[TOMS_QUEUE]>5
+				&&invoker.weaponstatus[TOMS_CHARGE]>5
+			)||( //auto mode + charged
+				(invoker.weaponstatus[0]&TOMF_FIREMODE)
+				&&invoker.weaponstatus[TOMS_CHARGE]>5
+			)||( //no battery or precharge
+				invoker.weaponstatus[TOMS_BATTERY]<1
+				&&invoker.weaponstatus[TOMS_PRECHARGE]<1
+			),"nope");
+		#### A 0;
+		#### E 1 offset(0,34);
+		#### F 2 offset(0,37){
+			A_MuzzleClimb(frandom(-0.1,0.1),-frandom(-0.1,0.1));
+			if(invoker.weaponstatus[TOMS_CHARGE]==5){ //play a sound when charge is finished
+				A_StartSound("weapons/lisacharge",CHAN_AUTO);
+			}
+			if(invoker.weaponstatus[TOMS_QUEUE]>5&&invoker.weaponstatus[TOMS_CHARGE]==5){//play a sound when queue is fully filled and charged is finished
+				A_StartSound("weapons/lisafullcharge",CHAN_AUTO);
+			}
+			if(invoker.weaponstatus[TOMS_CHARGE]<6
+			){ 
+				if(invoker.weaponstatus[TOMS_PRECHARGE]>0){ //exchange precharge for charge
+					invoker.weaponstatus[TOMS_PRECHARGE]--;
+					invoker.weaponstatus[TOMS_CHARGE]++;
+					A_StartSound("weapons/lisazap",8);
+				}else if(invoker.weaponstatus[TOMS_BATTERY]>0){ //exchange battery for precharge
+					invoker.weaponstatus[TOMS_BATTERY]--;
+					invoker.weaponstatus[TOMS_PRECHARGE]=12;
+					setweaponstate("charge");
+				}
+			}
+			if( //Charge queue when single fire.
+				invoker.weaponstatus[TOMS_CHARGE]>5
+				&&invoker.weaponstatus[TOMS_QUEUE]<6
+				&&!pressingFire()
+				){
+					invoker.weaponstatus[TOMS_CHARGE]=0;
+					invoker.weaponstatus[TOMS_QUEUE]++;
+			}
+		}
+		#### D 0 A_JumpIf(PressingFire()&&invoker.weaponstatus[0]&TOMF_FIREMODE,"fire");
+		#### D 0 A_JumpIf((
+				PressingFire()
+				&&invoker.weaponstatus[0]&TOMF_FIREMODE
+			)||PressingAltFire()
+			,"charge");
+		#### E 3 offset(0,35);
+		#### E 0{
+			int pre=invoker.weaponstatus[TOMS_PRECHARGE];
+			int chrg=invoker.weaponstatus[TOMS_CHARGE];
+			if(chrg<6){
+				invoker.weaponstatus[TOMS_PRECHARGE]+=chrg;
+				invoker.weaponstatus[TOMS_CHARGE]=0;
+				if(invoker.weaponstatus[TOMS_PRECHARGE]>11){
+					invoker.weaponstatus[TOMS_PRECHARGE]-=12;
+					invoker.weaponstatus[TOMS_BATTERY]++;
+				}
+			}
+		}
+		#### D 1;
+		goto nope;
+	fire:
+		---- A 0{
+			invoker.weaponstatus[0]&=~TOMF_JUSTUNLOAD;
+			if(invoker.weaponstatus[TOMS_CHARGE]>5)setweaponstate("shoot");
+			else if(invoker.weaponstatus[0]&TOMF_FIREMODE)setweaponstate("charge");
+		}
+		goto nope;
+	hold:
+		---- A 0;
+		goto nope;
+	shoot:
+		#### B 1{A_Gunflash();
+		//	if(invoker.weaponstatus[TOMS_CHARGE]==6)A_GunFlash();
+		}
+		#### C 2{
+			A_MuzzleClimb(
+				-frandom(0.8,1.),-frandom(1.2,1.6),
+				frandom(0.4,0.5),frandom(0.6,0.8)
+			);
+		}
+		#### D 1{
+			invoker.weaponstatus[TOMS_CHARGE]=0;
+			if(
+				invoker.weaponstatus[TOMS_BATTERY]<1
+				&&!(invoker.weaponstatus[0]&TOMF_FIREMODE)
+				){
+				A_StartSound("weapons/pistoldry",8,CHANF_OVERLAP,0.9);
+				setweaponstate("nope");
+			}
+			A_LisaCharge();
+		}
+		#### D 0 A_JumpIf((
+				invoker.weaponstatus[0]&TOMF_FIREMODE
+			),"fire");
+/*		#### AAAAA 5 {
+			A_JumpIf(PressingAltFire(),"charge");
+			A_Refire();
+			}
+*/		goto nope;
+	flash:
+		#### B 0;
+		---- A 1 bright{
+			HDFlashAlpha(64);
+			A_Light1();
+			let bbb=HDBulletActor.FireBullet(self,"HDB_PLASDMR",spread:1.,speedfactor:frandom(0.97,1.03));
+			A_AlertMonsters();
+			invoker.weaponstatus[TOMS_CHARGE]=0;
+			A_Quake(1,4,0,8);
+			A_ZoomRecoil(0.995);
+		}
+		---- A 0 {
+			A_StartSound("weapons/lizazap",9);
+			A_StartSound("weapons/lisafire",CHAN_WEAPON,CHANF_DEFAULT);
+			}
+		---- A 0 A_Light0();
+		stop;
+	unload:
+		---- A 0{
+			invoker.weaponstatus[0]|=TOMF_JUSTUNLOAD;
+			if(invoker.weaponstatus[TOMS_BATTERY]>=0)setweaponstate("unmag");
+		}goto nope;
+	reload:
+		---- A 0{
+			invoker.weaponstatus[0]&=~TOMF_JUSTUNLOAD;
+			bool nomags=HDMagAmmo.NothingLoaded(self,"HDBattery");
+			if(invoker.weaponstatus[TOMS_BATTERY]>=20)setweaponstate("nope");
+			else if(
+				invoker.weaponstatus[TOMS_BATTERY]<1
+				&&(
+					pressinguse()
+					||nomags
+				)
+			){
+				setweaponstate("nope");
+			}else if(nomags)setweaponstate("nope");
+		}goto unmag;
+	unmag:
+		---- A 1 offset(0,34) A_SetCrosshair(21);
+		---- A 1 offset(1,38);
+		---- A 2 offset(2,42);
+		---- A 3 offset(3,46) A_StartSound("weapons/pismagclick",8,CHANF_OVERLAP);
+		---- A 0{
+			int pmg=invoker.weaponstatus[TOMS_BATTERY];
+			invoker.weaponstatus[TOMS_BATTERY]=-1;
+			if(pmg<0)setweaponstate("magout");
+			else if(
+				(!PressingUnload()&&!PressingReload())
+				||A_JumpIfInventory("HDBattery",0,"null")
+			){
+				HDMagAmmo.SpawnMag(self,"HDBattery",pmg);
+				setweaponstate("magout");
+			}
+			else{
+				HDMagAmmo.GiveMag(self,"HDBattery",pmg);
+				A_StartSound("weapons/pocket",9);
+				setweaponstate("pocketmag");
+			}
+		}
+	pocketmag:
+		---- AAA 5 offset(0,46) A_MuzzleClimb(frandom(-0.2,0.8),frandom(-0.2,0.4));
+		goto magout;
+	magout:
+		---- A 0{
+			if(invoker.weaponstatus[0]&TOMF_JUSTUNLOAD)setweaponstate("reloadend");
+			else setweaponstate("loadmag");
+		}
+	loadmag:
+		---- A 4 offset(0,46) A_MuzzleClimb(frandom(-0.2,0.8),frandom(-0.2,0.4));
+		---- A 0 A_StartSound("weapons/pocket",9);
+		---- A 5 offset(0,46) A_MuzzleClimb(frandom(-0.2,0.8),frandom(-0.2,0.4));
+		---- A 3;
+		---- A 0{
+			let mmm=hdmagammo(findinventory("HDBattery"));
+			if(mmm){
+				invoker.weaponstatus[TOMS_BATTERY]=mmm.TakeMag(true);
+				A_StartSound("weapons/pismagclick",8);
+			}
+		}
+		goto reloadend;
+
+	reloadend:
+		---- A 2 offset(3,46);
+		---- A 1 offset(2,42);
+		---- A 1 offset(2,38);
+		---- A 1 offset(1,34);
+		goto nope;
+	spawn:
+		TOMP ABCD -1 nodelay{
+		if(
+			invoker.weaponstatus[TOMS_BATTERY]>0
+/*			||invoker.weaponstatus[TOMS_PRECHARGE]>0 // separate the britemap later so body = charge/precharge & battery = battery
+			||invoker.weaponstatus[TOMS_CHARGE]>0
+*/			){
+			if(invoker.weaponstatus[0]&TOMF_SCOPE)frame=2;
+			else frame=0;
+		}else if(invoker.weaponstatus[0]&TOMF_SCOPE)frame=3;
+		else frame=1;
+		}stop;
+	}
+	override void initializewepstats(bool idfa){
+		weaponstatus[TOMS_BATTERY]=20;
+		weaponstatus[TOMS_CHARGE]=6;
+		weaponstatus[TOMS_QUEUE]=6;
+		weaponstatus[TOMS_PRECHARGE]=0;
+		weaponstatus[TOMS_ZOOM]=30;
+	}
+	override void loadoutconfigure(string input){  
+		weaponstatus[0]|=TOMF_SCOPE;
+		weaponstatus[0]|=TOMF_TECHS;
+		int noscope=getloadoutvar(input,"noscope",1);
+		if(noscope>=0){
+			weaponstatus[0]&=~TOMF_SCOPE;
+			weaponstatus[0]&=~TOMF_TECHS;
+		}
+		int notech=getloadoutvar(input,"notech",1);
+		if(notech>=0){
+			weaponstatus[0]&=~TOMF_TECHS;
+//			weaponstatus[0]|=TOMF_SCOPE;
+		}
+		int zoom=getloadoutvar(input,"zoom",3);
+		if(zoom>=0)weaponstatus[TOMS_ZOOM]=clamp(zoom,16,70);
+	}
+}
+
+class LisaSpawn:IdleDummy{
+	states{
+	spawn:
+		TNT1 A 0 nodelay{
+			let zzz=HDLisa(spawn("HDLisa",pos,ALLOW_REPLACE));
+			if(!zzz)return;
+			HDF.TransferSpecials(self, zzz);
+			if(!random(0,1))zzz.weaponstatus[0]|=TOMF_SCOPE;
+//			if(!random(0,1))zzz.weaponstatus[0]&=~TOMF_TECHS;
+		}stop;
+	}
+}
+
+enum lisastatus{
+	TOMF_JUSTUNLOAD=1,
+	TOMF_FIREMODE=2, //0 single , 1 mult1
+	TOMF_SCOPE=4,
+	TOMF_TECHS=8,
+
+	TOMS_FLAGS=0,
+	TOMS_BATTERY=1,
+	TOMS_CHARGE=2,
+	TOMS_PRECHARGE=3,
+	TOMS_ZOOM=4,
+	TOMS_QUEUE=5,
+};

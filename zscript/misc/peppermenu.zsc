@@ -1,0 +1,103 @@
+class OptionMenuItemMultiCVarBitfield : OptionMenuItemOption
+{
+    int bitIndex;
+    int cvarIndex;
+
+    OptionMenuItemMultiCVarBitfield Init(String label, Name cvarBasename, int bitIndex, CVar graycheck = null, int center = 0)
+    {
+        // Mask to lower 5 bits (0-31).
+        self.bitIndex = bitIndex & 31;
+
+        // Shift to get everything BUT the lower 5 bits.
+        self.cvarIndex = bitIndex >> 5;
+
+        String cvarName = String.format("%s_%d", cvarBasename, self.cvarIndex + 1);
+
+        // Note: If we use something other than YesNo or OnOff here,
+        // we would need to use different return values and inputs for
+        // GetSelection() and SetSelection().
+        Super.Init(label, cvarName, "YesNo", graycheck, center);
+
+        // Because this can cause a new CVar to be referenced every
+        // 32nd item added in a mod, we might need to remind the
+        // developer what to do by the time that happens.
+        if(!mCVar) {
+            ThrowAbortException("Missing CVar \""..cvarName.."\". Did you forget to add something to CVARINFO?");
+        }
+
+        return self;
+    }
+
+    override int GetSelection()
+    {
+        if(mCVar) {
+            int currentBitfield = mCVar.GetInt();
+            if(currentBitfield & (1 << bitIndex)) {
+                return 1;
+            }
+        }
+        return 0;
+    }
+
+    override void SetSelection(int selection)
+    {
+        int val = mCVar.GetInt();
+
+        if(selection) {
+            val |= (1 << bitIndex);
+        } else {
+            val &= ~(1 << bitIndex);
+        }
+
+        mCVar.SetInt(val);
+    }
+}
+
+class OptionMenuItemPepperWeapon : OptionMenuItemMultiCVarBitfield
+{
+    OptionMenuItemPepperWeapon Init(String label, int bitIndex)
+    {
+        // Call the parent initialization with a different label
+        // because the SetCVarDescription call is private inside
+        // OptionMenuItemOption and this is the only way to affect it.
+        super.Init("Peppergrinder weapon spawns bitfield", "pepper_weaponspawns", bitIndex);
+
+        // Set the actual label back to what we want it to be.
+        mLabel = label;
+
+        return self;
+    }
+}
+
+class OptionMenuItemPepperAmmo : OptionMenuItemMultiCVarBitfield
+{
+    OptionMenuItemPepperAmmo Init(String label, int bitIndex)
+    {
+        // Call the parent initialization with a different label
+        // because the SetCVarDescription call is private inside
+        // OptionMenuItemOption and this is the only way to affect it.
+        super.Init("Peppergrinder ammo spawns bitfield", "pepper_ammospawns", bitIndex);
+
+        // Set the actual label back to what we want it to be.
+        mLabel = label;
+
+        return self;
+    }
+}
+
+
+class OptionMenuItemPepperItem : OptionMenuItemMultiCVarBitfield
+{
+    OptionMenuItemPepperItem Init(String label, int bitIndex)
+    {
+        // Call the parent initialization with a different label
+        // because the SetCVarDescription call is private inside
+        // OptionMenuItemOption and this is the only way to affect it.
+        super.Init("Peppergrinder item spawns bitfield", "pepper_itemspawns", bitIndex);
+
+        // Set the actual label back to what we want it to be.
+        mLabel = label;
+
+        return self;
+    }
+}

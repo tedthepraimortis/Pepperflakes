@@ -1,44 +1,4 @@
-// ------------------------------------------------------------
-// Bastard Rifle
-// ------------------------------------------------------------
-/* While it has gone on record that Lt. Krognar Lodyte designed
-the TRO-G, after his death and later resurrection as a cyborg,
-Lt. Krognar found the small magazine capacity of the TRO-G had
-gotten his new body destroyed on several instances, mainly when 
-dealing with larger demons such as Hell Knights in close quarters.
-
-After enough of these incidents of being scrapped and repaired,
-several eyewitnesses reported the Lieutenant had grabbed one of the
-mechanics, stating "You're going to help me make a gun better
-suited for killing those goat bastards. I'm not gonna get
-into anymore debt with these assholes than I already have."
-
-After a few weeks with a leftover TRO-G and much table flipping,
-the Bastard had been brought into this world. A far less elegant
-weapon, the Bastard's most notable feature is the built in feeder
-mechanism, doing away with magazines, the rifle is fed stray 4.26
-rounds and is capable of holding roughly 100 rounds at any given 
-time. Alongside this, the Bastard has a modified firing mechanism,
-sacrificing the full auto firemode in favor of the hyperburst similar
-to the now mainstream ZM66, but without the risk of a cookoff thanks
-to the vented barrel and the ammo separation of the hopper system.
-
-It should be noted however that due to this bizarre configuration 
-and using fragile 4mil cartridges, there is always a small chance
-of the weapon breaking ammunition while being fired. The Bastard is
-durable enough to handle breakages without worry of jams or cookoffs,
-but ammo waste is a common side effect of the weapon.
-
-Like the TRO-G, the Bastard also features an integrated grenade  
-launcher with the same trigger group. A deliberate choice from 
-Krognar as he has grown accustomed to the hair trigger grenade launcher
-configuration.
-
-Naturally this weapon was not licensed or endorsed by Volt whatsoever,
-making the rifle and the story behind it another strange anecdote in Volt's
-history, though Volt themselves have refused to provide any further commentary.
-*/
-
+// Old CBT Balls - [Tavi]
 class PGCBTBall:HDFireball{
 	default{
 		+extremedeath
@@ -188,8 +148,6 @@ class PGCBTBallLight:PointLight{
 	}
 }
 
-const HDLD_BAST="bst";
-
 class HDBastardRifle:PGWeapon{
 	int hnd;
 	default{
@@ -199,13 +157,13 @@ class HDBastardRifle:PGWeapon{
 		weapon.slotpriority 1.6;
 		pgweapon.custompickupmsg true;
 		inventory.pickupsound "misc/w_pkup";
-		inventory.pickupmessage "You found a Bastard Rifle! What a crude thing...";
+		inventory.pickupmessage "$PEPPER_PICKUP_BASTARD";
 		scale 0.6;
 		weapon.bobrangex 0.22;
 		weapon.bobrangey 0.9;
-		obituary "%o got put into the past tense by %k.";
-		hdweapon.refid HDLD_BAST;
-		tag "$TAG_BAST";
+		obituary "$PEPPER_OBITUARY_BASTARD";
+		hdweapon.refid "bst";
+		tag "$PEPPER_TAG_BASTARD";
 		inventory.icon "BSPAA0";
 		
 		hdweapon.loadoutcodes "
@@ -331,17 +289,17 @@ class HDBastardRifle:PGWeapon{
 	}
 	override string gethelptext(){
 		return
-		WEPHELP_FIRESHOOT
-		..WEPHELP_RELOAD.."  Reload mag\n"
-		..WEPHELP_FIREMODE.."  Semi/Burst\n"
+		LWPHELP_FIRESHOOT
+		..LWPHELP_RELOAD.."  Reload mag\n"
+		..LWPHELP_FIREMODE.."  Semi/Burst\n"
 		..(weaponstatus[BASTS_CBT]>0?
-		(WEPHELP_ALTRELOAD.."	Reload Concussive Blast Transmitter\n"
-		..WEPHELP_ALTFIRE.."	Shoot/Pump Concussive Blast Transmitter\n"
-		..WEPHELP_UNLOAD.." 'Unload' hopper \(Hold "..WEPHELP_USE.." to unload Concussive Blast Transmitter\)\n")
-		:(WEPHELP_ALTRELOAD.."	Reload GL\n"
-		..WEPHELP_ALTFIRE.."  Shoot GL\n"
-		..WEPHELP_UNLOAD.." 'Unload' hopper \(Hold "..WEPHELP_FIREMODE.." to unload GL\)\n"))
-		..WEPHELP_MAGMANAGER
+		(LWPHELP_ALTRELOAD.."	Reload Concussive Blast Transmitter\n"
+		..LWPHELP_ALTFIRE.."	Shoot/Pump Concussive Blast Transmitter\n"
+		..LWPHELP_UNLOAD.." 'Unload' hopper \(Hold "..LWPHELP_USE.." to unload Concussive Blast Transmitter\)\n")
+		:(LWPHELP_ALTRELOAD.."	Reload GL\n"
+		..LWPHELP_ALTFIRE.."  Shoot GL\n"
+		..LWPHELP_UNLOAD.." 'Unload' hopper \(Hold "..LWPHELP_FIREMODE.." to unload GL\)\n"))
+		..LWPHELP_MAGMANAGER
 		;
 	}
 	override void DrawSightPicture(

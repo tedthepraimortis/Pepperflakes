@@ -1,0 +1,263 @@
+class BCStockKit : PGAttachment{
+	default {
+		Scale 0.8;
+		Inventory.PickupMessage "You got a Box Cannon Broomhandle Stock!";
+//		HDPickup.RefID "bcs";
+		HDPickup.Bulk 24;
+		+Inventory.InvBar;
+		+hdpickup.norandombackpackspawn;
+		Tag "Broomhandle Stock";
+	}
+	action void a_activate(){
+		let sacrificeBC = HDBoxCannon(player.readyweapon);
+		if (
+			!sacrificeBC
+			|| sacrificeBC.weaponstatus[0]&MPSF_STOCK
+			) {
+			a_log("You need a Box Cannon with no stock to use this on",true);
+		}
+		else {
+			A_StartSound(PPG_AttUseSound);
+			[invoker.garbage,invoker.newgun] = self.A_SpawnItemEx("HDBoxCannon",
+					cos(pitch)*12,0,height-8-sin(pitch)*12,
+					cos(pitch)*(random(10,20)*0.1),0.2*randompick(-1,1),-sin(pitch),
+					0,SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH
+				);
+			invoker.boxc = HDBoxCannon(invoker.newgun);
+			invoker.boxc.weaponstatus[MPSS_CHAMBER] = sacrificeBC.weaponstatus[MPSS_CHAMBER];
+			invoker.boxc.weaponstatus[MPSS_MAG] = sacrificeBC.weaponstatus[MPSS_MAG];
+			invoker.boxc.weaponstatus[MPSS_MAGTYPE] = sacrificeBC.weaponstatus[MPSS_MAGTYPE];
+			invoker.boxc.weaponstatus[MPSS_BARREL] = sacrificeBC.weaponstatus[MPSS_BARREL];
+			invoker.boxc.weaponstatus[0]|=MPSF_STOCK;
+			sacrificeBC.destroy();
+			self.takeinventory("BCStockKit",1);
+		}
+	}
+	states{
+		Spawn:
+			MPS2 A 1;
+			loop;
+		Use:
+			TNT1  A 0 a_activate();
+	}
+}
+
+class BCBarrelKit : PGAttachment{
+	default {
+		Scale 0.8;
+		Inventory.PickupMessage "You got a Box Cannon Carbine Barrel!";
+//		HDPickup.RefID "bcs";
+		HDPickup.Bulk 18;
+		+Inventory.InvBar;
+		+hdpickup.norandombackpackspawn;
+		Tag "Carbine Barrel";
+	}
+	action void a_activate(){
+		let sacrificeBC = HDBoxCannon(player.readyweapon);
+		if (
+			!sacrificeBC
+			|| sacrificeBC.weaponstatus[MPSS_BARREL] == 1
+			) {
+			a_log("You need a Box Cannon with no carbine barrel to use this on",true);
+		}
+		else {
+			A_StartSound(PPG_AttUseSound);
+			[invoker.garbage,invoker.newgun] = self.A_SpawnItemEx("HDBoxCannon",
+					cos(pitch)*12,0,height-8-sin(pitch)*12,
+					cos(pitch)*(random(10,20)*0.1),0.2*randompick(-1,1),-sin(pitch),
+					0,SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH
+				);
+			invoker.boxc = HDBoxCannon(invoker.newgun);
+			invoker.boxc.weaponstatus[MPSS_CHAMBER] = sacrificeBC.weaponstatus[MPSS_CHAMBER];
+			invoker.boxc.weaponstatus[MPSS_MAG] = sacrificeBC.weaponstatus[MPSS_MAG];
+			invoker.boxc.weaponstatus[MPSS_MAGTYPE] = sacrificeBC.weaponstatus[MPSS_MAGTYPE];
+			invoker.boxc.weaponstatus[MPSS_BARREL] = 1;
+			if(sacrificeBC.weaponstatus[0]&MPSF_STOCK)
+			{
+				invoker.boxc.weaponstatus[0]|=MPSF_STOCK;
+			}
+			if(sacrificeBC.weaponstatus[MPSS_BARREL] == 2)
+			{
+				self.A_SpawnItemEx("BCSilencerKit",
+					cos(pitch)*12,0,height-8-sin(pitch)*12,
+					cos(pitch)*(random(10,20)*0.1),0.2*randompick(-1,1),-sin(pitch),
+					0,SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH
+				);
+			}
+			sacrificeBC.destroy();
+			self.takeinventory("BCBarrelKit",1);
+		}
+	}
+	states{
+		Spawn:
+			MPS2 B 1;
+			loop;
+		Use:
+			TNT1  A 0 a_activate();
+	}
+}
+
+class BCSilencerKit : PGAttachment{
+	default {
+		Scale 0.7;
+		Inventory.PickupMessage "You got a Box Cannon Silencer!";
+//		HDPickup.RefID "bcs";
+		HDPickup.Bulk 18;
+		+Inventory.InvBar;
+		+hdpickup.norandombackpackspawn;
+		Tag "Box Cannon Silencer";
+	}
+	action void a_activate(){
+		let sacrificeBC = HDBoxCannon(player.readyweapon);
+		if (
+			!sacrificeBC
+			|| sacrificeBC.weaponstatus[MPSS_BARREL] == 2
+			) {
+			a_log("You need a Box Cannon with no silencer to use this on",true);
+		}
+		else {
+			A_StartSound(PPG_AttUseSound);
+			[invoker.garbage,invoker.newgun] = self.A_SpawnItemEx("HDBoxCannon",
+					cos(pitch)*12,0,height-8-sin(pitch)*12,
+					cos(pitch)*(random(10,20)*0.1),0.2*randompick(-1,1),-sin(pitch),
+					0,SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH
+				);
+			invoker.boxc = HDBoxCannon(invoker.newgun);
+			invoker.boxc.weaponstatus[MPSS_CHAMBER] = sacrificeBC.weaponstatus[MPSS_CHAMBER];
+			invoker.boxc.weaponstatus[MPSS_MAG] = sacrificeBC.weaponstatus[MPSS_MAG];
+			invoker.boxc.weaponstatus[MPSS_MAGTYPE] = sacrificeBC.weaponstatus[MPSS_MAGTYPE];
+			invoker.boxc.weaponstatus[MPSS_BARREL] = 2;
+			if(sacrificeBC.weaponstatus[0]&MPSF_STOCK)
+			{
+				invoker.boxc.weaponstatus[0]|=MPSF_STOCK;
+			}
+			if(sacrificeBC.weaponstatus[MPSS_BARREL] == 1)
+			{
+				self.A_SpawnItemEx("BCBarrelKit",
+					cos(pitch)*12,0,height-8-sin(pitch)*12,
+					cos(pitch)*(random(10,20)*0.1),0.2*randompick(-1,1),-sin(pitch),
+					0,SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH
+				);
+			}
+			sacrificeBC.destroy();
+			self.takeinventory("BCSilencerKit",1);
+		}
+	}
+	states{
+		Spawn:
+			MPS2 C 1;
+			loop;
+		Use:
+			TNT1  A 0 a_activate();
+	}
+}
+
+class BCXMagKit : PGAttachment{
+	default {
+		Scale 0.16;
+		Inventory.PickupMessage "You got a Box Cannon Magazine Extender!";
+//		HDPickup.RefID "bcs";
+		HDPickup.Bulk 18;
+		+Inventory.InvBar;
+		+hdpickup.norandombackpackspawn;
+		Tag "Box Cannon 20rnd Magazine";
+	}
+	action void a_activate(){
+		let sacrificeBC = HDBoxCannon(player.readyweapon);
+		if (
+			!sacrificeBC
+			|| sacrificeBC.weaponstatus[MPSS_MAGTYPE] == 1
+			) {
+			a_log("You need a Box Cannon with no magazine extention to use this on",true);
+		}
+		else {
+			A_StartSound(PPG_AttUseSound);
+			[invoker.garbage,invoker.newgun] = self.A_SpawnItemEx("HDBoxCannon",
+					cos(pitch)*12,0,height-8-sin(pitch)*12,
+					cos(pitch)*(random(10,20)*0.1),0.2*randompick(-1,1),-sin(pitch),
+					0,SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH
+				);
+			invoker.boxc = HDBoxCannon(invoker.newgun);
+			invoker.boxc.weaponstatus[MPSS_CHAMBER] = sacrificeBC.weaponstatus[MPSS_CHAMBER];
+			invoker.boxc.weaponstatus[MPSS_MAG] = sacrificeBC.weaponstatus[MPSS_MAG];
+			invoker.boxc.weaponstatus[MPSS_MAGTYPE] = 1;
+			invoker.boxc.weaponstatus[MPSS_BARREL] = sacrificeBC.weaponstatus[MPSS_BARREL];
+			if(sacrificeBC.weaponstatus[0]&MPSF_STOCK)
+			{
+				invoker.boxc.weaponstatus[0]|=MPSF_STOCK;
+			}
+			if(sacrificeBC.weaponstatus[MPSS_MAGTYPE] == 2)
+			{
+				self.A_SpawnItemEx("BCDrumKit",
+					cos(pitch)*12,0,height-8-sin(pitch)*12,
+					cos(pitch)*(random(10,20)*0.1),0.2*randompick(-1,1),-sin(pitch),
+					0,SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH
+				);
+			}
+			sacrificeBC.destroy();
+			self.takeinventory("BCXMagKit",1);
+		}
+	}
+	states{
+		Spawn:
+			PGA2 A 1;
+			loop;
+		Use:
+			TNT1  A 0 a_activate();
+	}
+}
+
+class BCDrumKit : PGAttachment{
+	default {
+		Scale 0.3;
+		Inventory.PickupMessage "You got a Box Cannon Drum Magazine!";
+//		HDPickup.RefID "bcs";
+		HDPickup.Bulk 36;
+		+Inventory.InvBar;
+		+hdpickup.norandombackpackspawn;
+		Tag "Box Cannon 40rnd Drum";
+	}
+	action void a_activate(){
+		let sacrificeBC = HDBoxCannon(player.readyweapon);
+		if (
+			!sacrificeBC
+			|| sacrificeBC.weaponstatus[MPSS_MAGTYPE] == 2
+			) {
+			a_log("You need a Box Cannon with no drum magazine to use this on",true);
+		}
+		else {
+			A_StartSound(PPG_AttUseSound);
+			[invoker.garbage,invoker.newgun] = self.A_SpawnItemEx("HDBoxCannon",
+					cos(pitch)*12,0,height-8-sin(pitch)*12,
+					cos(pitch)*(random(10,20)*0.1),0.2*randompick(-1,1),-sin(pitch),
+					0,SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH
+				);
+			invoker.boxc = HDBoxCannon(invoker.newgun);
+			invoker.boxc.weaponstatus[MPSS_CHAMBER] = sacrificeBC.weaponstatus[MPSS_CHAMBER];
+			invoker.boxc.weaponstatus[MPSS_MAG] = sacrificeBC.weaponstatus[MPSS_MAG];
+			invoker.boxc.weaponstatus[MPSS_MAGTYPE] = 2;
+			invoker.boxc.weaponstatus[MPSS_BARREL] = sacrificeBC.weaponstatus[MPSS_BARREL];
+			if(sacrificeBC.weaponstatus[0]&MPSF_STOCK)
+			{
+				invoker.boxc.weaponstatus[0]|=MPSF_STOCK;
+			}
+			if(sacrificeBC.weaponstatus[MPSS_MAGTYPE] == 1)
+			{
+				self.A_SpawnItemEx("BCXMagKit",
+					cos(pitch)*12,0,height-8-sin(pitch)*12,
+					cos(pitch)*(random(10,20)*0.1),0.2*randompick(-1,1),-sin(pitch),
+					0,SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH
+				);
+			}
+			sacrificeBC.destroy();
+			self.takeinventory("BCDrumKit",1);
+		}
+	}
+	states{
+		Spawn:
+			PGA2 B 1;
+			loop;
+		Use:
+			TNT1  A 0 a_activate();
+	}
+}
